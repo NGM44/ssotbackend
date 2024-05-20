@@ -1,0 +1,36 @@
+import cors from "cors";
+import express from "express";
+import dotenv from 'dotenv';
+import axios from "axios";
+import routes from "routes/routes";
+import './utils/response/customSuccess';
+
+dotenv.config(); 
+const app = express();
+const port = process.env.PORT;
+
+axios.interceptors.request.use(request => {
+  console.log('Starting Request', JSON.stringify(request, null, 2))
+  return request
+})
+
+axios.interceptors.response.use(response => {
+  const simplifiedResponse = {
+    data: response.data,   // or a portion of it if it's too large
+    status: response.status,
+    headers: response.headers,
+    // Add any other properties you are interested in
+  };
+
+  console.log('Response:', JSON.stringify(simplifiedResponse, null, 2));
+  return response;
+});
+
+
+app.use(cors({ origin: "*" }));
+app.use(express.json());
+app.use('/', routes);
+app.listen(port, () => {
+  console.log(`Listening on port ${port}...`);
+  console.log(process.env.DATABASE_URL);
+});
