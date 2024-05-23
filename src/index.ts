@@ -1,8 +1,9 @@
-import cors from "cors";
-import express from "express";
-import dotenv from 'dotenv';
 import axios from "axios";
+import cors from "cors";
+import dotenv from 'dotenv';
+import express from "express";
 import routes from "routes/routes";
+import { errorHandler } from "utils/errorHandler";
 import './utils/response/customSuccess';
 
 dotenv.config(); 
@@ -29,8 +30,8 @@ axios.interceptors.response.use(response => {
 
 app.use(cors({ origin: "*" }));
 app.use(express.json());
-app.use('/', routes);
 app.listen(port, () => {
-  console.log(`Listening on port ${port}...`);
-  console.log(process.env.DATABASE_URL);
+  app.use("/", routes);
+  app.use(errorHandler);
+  return console.log(`Listening on port ${port}...`);
 });

@@ -4,9 +4,13 @@
   "description": "",
   "module": "index.js",
   "scripts": {
+    "start": "npm rebuild && npm run build && cross-env NODE_PATH=./dist node ./dist/index.js",
+    "build": "npm run generate && rimraf dist && tsc",
     "dev": "cross-env debug=* NODE_PATH=./src ts-node-dev --respawn  ./src/index.ts --inspect",
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate": "prisma generate --schema prisma/schema.prisma",
+    "create-migration": "npx prisma migrate dev --create-only --schema prisma/schema.prisma",
+    "apply-migration": "npx prisma migrate deploy --schema prisma/schema.prisma",
     "push": "prisma db push --schema prisma/schema.prisma"
   },
   "keywords": [],

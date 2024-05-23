@@ -1,18 +1,12 @@
+import { Prisma, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { Request, Response, NextFunction } from "express";
-import { CustomError } from "../../utils/response/custom-error/CustomError";
 import db from "db/ssotdb";
-import { Prisma } from "@prisma/client";
+import { NextFunction, Request, Response } from "express";
+import { JwtPayload } from "types/jwtPayload";
 import { ulid } from "ulid";
 import { createAccessToken } from "utils/createJwtToken";
-import { JwtPayload } from "types/jwtPayload";
+import { CustomError } from "../../utils/response/custom-error/CustomError";
 
-
-enum Role {
-  ADMIN = "ADMIN",
-  USER = "USER",
-  COMPANY = "COMPANY"
-}
 
 export const signUp = async (
   req: Request,
