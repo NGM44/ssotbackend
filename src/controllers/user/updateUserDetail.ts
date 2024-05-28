@@ -1,7 +1,4 @@
-import { Request, Response, NextFunction } from "express";
-import { CustomError } from "../../utils/response/custom-error/CustomError";
-import db from "db/ssotdb";
-import { Prisma } from "@prisma/client";
+import { NextFunction, Request, Response } from "express";
 
 export const getuserDetails  = async (
     req: Request,

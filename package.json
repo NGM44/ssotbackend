@@ -7,11 +7,7 @@
     "start": "npm rebuild && npm run build && cross-env NODE_PATH=./dist node ./dist/index.js",
     "build": "npm run generate && rimraf dist && tsc",
     "dev": "cross-env debug=* NODE_PATH=./src ts-node-dev --respawn  ./src/index.ts --inspect",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "generate": "prisma generate --schema prisma/schema.prisma",
-    "create-migration": "npx prisma migrate dev --create-only --schema prisma/schema.prisma",
-    "apply-migration": "npx prisma migrate deploy --schema prisma/schema.prisma",
-    "push": "prisma db push --schema prisma/schema.prisma"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -20,11 +16,11 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.10.4",
+    "@types/uuid": "^9.0.8",
     "cross-env": "^7.0.3",
     "typescript": "^5.4.2"
   },
   "dependencies": {
-    "@prisma/client": "^5.10.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/lodash": "^4.14.202",
@@ -41,8 +37,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.0",
     "multer": "^1.4.5-lts.1",
-    "prisma": "^5.10.2",
     "ts-node-dev": "^2.0.0",
-    "ulid": "^2.3.0"
+    "uuid": "^9.0.1"
   }
 }

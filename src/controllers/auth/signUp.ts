@@ -1,11 +1,10 @@
-import { Prisma, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import db from "db/ssotdb";
+import { User } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { JwtPayload } from "types/jwtPayload";
-import { ulid } from "ulid";
 import { createAccessToken } from "utils/createJwtToken";
 import { CustomError } from "../../utils/response/custom-error/CustomError";
+import { Role } from "types/mongodb";
 
 
 export const signUp = async (
@@ -14,7 +13,7 @@ export const signUp = async (
   next: NextFunction
 ) => {
   const { userName, email, password, role } = req.body;
-  const existingUser = await db.user.findFirst({
+  const existingUser = await User.findOne({
     where: {
       email,
     },
@@ -39,10 +38,7 @@ export const signUp = async (
 
   try {
     const hashedPassword = bcrypt.hashSync(password, 8);
-    const id = ulid();
-    console.log("ID",id);
-    const data: Prisma.UserCreateInput = {
-      id,
+    const data = {
       createdAt: new Date(),
       updatedAt: new Date(),
       name: userName,
@@ -51,9 +47,9 @@ export const signUp = async (
       role: userRole,
     };
     console.log(data);
-    const newUser = await db.user.create({
+    const newUser = await User.create(
       data
-    });
+    );
     const jwtPayload: JwtPayload = {
       id: String(newUser.id),
       name: newUser.name ?? "",
@@ -97,7 +93,7 @@ export const userNameAvailablity = async (
     );
     return next(customError);
   }
-  const userExist = await db.user.findFirst({
+  const userExist = await User.find({
     where: {
       name: userName,
     },

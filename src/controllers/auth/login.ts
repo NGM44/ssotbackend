@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { CustomError } from "../../utils/response/custom-error/CustomError";
 import { JwtPayload } from "../../types/jwtPayload";
 import { createAccessToken } from "../../utils/createJwtToken";
-import db from "db/ssotdb";
+import { User } from "db/mongodb";
 
 export const login = async (
   req: Request,
@@ -12,7 +12,7 @@ export const login = async (
 ) => {
   const { email, password } = req.body;
   try {
-    const user = await db.user.findFirst({ where: { email,blocked: false } });
+    const user = await User.findOne({ email: email, deactivated: false });
     if (!user) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);

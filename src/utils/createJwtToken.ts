@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { JwtPayload } from "../types/jwtPayload";
 import jwt from 'jsonwebtoken';
-import { isUndefined } from "lodash";
+import { JwtPayload } from "../types/jwtPayload";
 import { CustomError } from "./response/custom-error/CustomError";
 
 export const createAccessToken = (payload: JwtPayload): string => {
@@ -13,7 +12,7 @@ export const createAccessToken = (payload: JwtPayload): string => {
 
 export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
     const key = req.get("apiKey") || req?.query?.apiKey;
-    if (!isUndefined(key) && key === process.env.SELF_API_KEY) {
+    if (key && key === process.env.SELF_API_KEY) {
       return next();
     }
     const authHeader = req.get("Authorization");

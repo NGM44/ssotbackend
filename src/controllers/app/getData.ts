@@ -1,5 +1,5 @@
+import { WeatherData } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { IWeatherData, WeatherData } from "model/weatherDetails";
 import { CustomError } from "../../utils/response/custom-error/CustomError";
 
 export const getData = async (
@@ -8,7 +8,8 @@ export const getData = async (
   next: NextFunction
 ) => {
   try {
-    const data: IWeatherData[] = await WeatherData.find().limit(10000);
+     
+    const data = await WeatherData.find().limit(10000);
     res.customSuccess(200, "Fetched Successfully", data);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
