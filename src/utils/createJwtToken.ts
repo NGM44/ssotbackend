@@ -1,34 +1,30 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { JwtUserPayload, JwtDevicePayload } from "../types/jwtPayload";
-import { CustomError } from "./response/custom-error/CustomError";
 import { Device, User } from "db/mongodb";
 import { IDevice, IUser } from "types/mongodb";
+import { JwtUserPayload, JwtDevicePayload } from "../types/jwtPayload";
+import { CustomError } from "./response/custom-error/CustomError";
 
-export const createAccessToken = (payload: JwtUserPayload): string => {
-  return jwt.sign(payload, process.env.JWT_USER_SECRET_KEY as string, {
+export const createAccessToken = (payload: JwtUserPayload): string => jwt.sign(payload, process.env.JWT_USER_SECRET_KEY as string, {
     expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION,
     algorithm: "HS512",
   });
-};
 
-export const createDeviceAccessToken = (payload: JwtDevicePayload): string => {
-  return jwt.sign(payload, process.env.JWT_DEVICE_SECRET_KEY as string, {
+export const createDeviceAccessToken = (payload: JwtDevicePayload): string => jwt.sign(payload, process.env.JWT_DEVICE_SECRET_KEY as string, {
     algorithm: "HS512",
   });
-};
 
 export const checkJwt = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const accessToken = req.get("AccessToken");
   if (!accessToken) {
     const customError = new CustomError(
       400,
       "General",
-      "AccessToken header not provided"
+      "AccessToken header not provided",
     );
     return next(customError);
   }
@@ -36,7 +32,7 @@ export const checkJwt = async (
   try {
     const jwtPayload = jwt.verify(
       token,
-      process.env.JWT_SECRET as string
+      process.env.JWT_SECRET as string,
     ) as JwtUserPayload;
     req.jwtPayload = jwtPayload;
     const userDetails: IUser | null = await User.findOne({
@@ -50,7 +46,7 @@ export const checkJwt = async (
         "Raw",
         "JWT error",
         null,
-        "No User with the ID found"
+        "No User with the ID found",
       );
       return next(customError);
     } else {
@@ -66,14 +62,14 @@ export const checkJwt = async (
 export const checkDeviceJwt = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const accessToken = req.get("AccessToken");
   if (!accessToken) {
     const customError = new CustomError(
       400,
       "General",
-      "AccessToken header not provided"
+      "AccessToken header not provided",
     );
     return next(customError);
   }
@@ -81,7 +77,7 @@ export const checkDeviceJwt = async (
   try {
     const jwtPayload = jwt.verify(
       token,
-      process.env.JWT_DEVICE_SECRET_KEY as string
+      process.env.JWT_DEVICE_SECRET_KEY as string,
     ) as JwtDevicePayload;
     req.jwtPayload = jwtPayload;
     const device: IDevice | null = await Device.findOne({
@@ -95,7 +91,7 @@ export const checkDeviceJwt = async (
         "Raw",
         "JWT error",
         null,
-        "No Device with the ID found"
+        "No Device with the ID found",
       );
       return next(customError);
     } else {

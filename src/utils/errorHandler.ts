@@ -6,9 +6,8 @@ export const errorHandler = (
   err: CustomError,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  console.error(err.stack);
   logger.error(err);
   return res.status(err.HttpStatusCode).json(err.JSON);
 };

@@ -7,6 +7,7 @@ import routes from "routes/routes";
 import { errorHandler } from "utils/errorHandler";
 import "./utils/response/customSuccess";
 import logger from "utils/logger";
+/* eslint-disable no-console */
 
 dotenv.config();
 const app = express();
@@ -30,7 +31,10 @@ axios.interceptors.response.use((response) => {
 });
 app.use(cors({ origin: "*" }));
 app.use(express.json());
-mongoose.connect(process.env.MONGO_DB_URL || "",{dbName: process.env.MONGO_DB_NAME || "vayuguna"})
+mongoose
+  .connect(process.env.MONGO_DB_URL || "", {
+    dbName: process.env.MONGO_DB_NAME || "vayuguna",
+  })
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 app.listen(port, () => {

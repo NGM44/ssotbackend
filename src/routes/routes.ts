@@ -1,17 +1,15 @@
-import { Request, Response } from "express";
-import admin from "./admin";
-import app from "./app";
-import auth from "./auth";
-
-import { Router } from "express";
+import { Request, Response , Router } from "express";
+import device from "./device";
+import user from "./user";
+import weather from "./weather";
 
 const router = Router();
 
-router.use("/app", app);
-router.use("/auth", auth);
-router.use("/admin", admin);
+router.use("/user", user);
+router.use("/device", device);
+router.use("/weather", weather);
 router.use("/loadTest", async (req: Request, res: Response) => {
-  res.customSuccess(200, "success");
+  return res.customSuccess(200, "success");
 });
 
 export default router;

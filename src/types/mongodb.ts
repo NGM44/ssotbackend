@@ -1,4 +1,5 @@
 import { Document } from "mongoose";
+
 export interface IWeatherData extends Document {
   temperature: number;
   humidity: number;

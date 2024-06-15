@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { IDevice, IUser, IWeatherData, Role, Status } from "types/mongodb";
+
 const { Schema } = mongoose;
 
 const roles = [Role.ADMIN, Role.USER];
@@ -26,7 +27,7 @@ const userSchema = new Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+  },
 );
 
 const deviceSchema = new Schema(
@@ -41,7 +42,7 @@ const deviceSchema = new Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+  },
 );
 
 const userDeviceMappingSchema = new Schema(
@@ -54,7 +55,7 @@ const userDeviceMappingSchema = new Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+  },
 );
 
 userDeviceMappingSchema.index({ deviceId: 1, userId: 1 }, { unique: true });
@@ -74,17 +75,17 @@ const weatherDataSchema = new Schema(
       timeField: "timestamp",
       granularity: "seconds",
     },
-  }
+  },
 );
 const User = mongoose.model<IUser>("User", userSchema);
 const Device = mongoose.model<IDevice>("Device", deviceSchema);
 const UserDeviceMapping = mongoose.model(
   "UserDeviceMapping",
-  userDeviceMappingSchema
+  userDeviceMappingSchema,
 );
 const WeatherData = mongoose.model<IWeatherData>(
   "WeatherData",
-  weatherDataSchema
+  weatherDataSchema,
 );
 
 export { Device, User, UserDeviceMapping, WeatherData };
