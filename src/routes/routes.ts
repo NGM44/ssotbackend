@@ -3,7 +3,7 @@ import admin from "./admin";
 import app from "./app";
 import auth from "./auth";
 
-const { Router } = require("express");
+import { Router } from "express";
 
 const router = Router();
 

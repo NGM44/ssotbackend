@@ -1,41 +1,109 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from 'jsonwebtoken';
-import { JwtPayload } from "../types/jwtPayload";
+import jwt from "jsonwebtoken";
+import { JwtUserPayload, JwtDevicePayload } from "../types/jwtPayload";
 import { CustomError } from "./response/custom-error/CustomError";
+import { Device, User } from "db/mongodb";
+import { IDevice, IUser } from "types/mongodb";
 
-export const createAccessToken = (payload: JwtPayload): string => {
-    return jwt.sign(payload, process.env.JWT_SECRET as string, {
-        expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION,
-        algorithm: "HS512"
-    });
+export const createAccessToken = (payload: JwtUserPayload): string => {
+  return jwt.sign(payload, process.env.JWT_USER_SECRET_KEY as string, {
+    expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION,
+    algorithm: "HS512",
+  });
 };
 
-export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
-    const key = req.get("apiKey") || req?.query?.apiKey;
-    if (key && key === process.env.SELF_API_KEY) {
-      return next();
-    }
-    const authHeader = req.get("Authorization");
-    if (!authHeader) {
+export const createDeviceAccessToken = (payload: JwtDevicePayload): string => {
+  return jwt.sign(payload, process.env.JWT_DEVICE_SECRET_KEY as string, {
+    algorithm: "HS512",
+  });
+};
+
+export const checkJwt = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const accessToken = req.get("AccessToken");
+  if (!accessToken) {
+    const customError = new CustomError(
+      400,
+      "General",
+      "AccessToken header not provided"
+    );
+    return next(customError);
+  }
+  const token = accessToken.split(" ")[1];
+  try {
+    const jwtPayload = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as JwtUserPayload;
+    req.jwtPayload = jwtPayload;
+    const userDetails: IUser | null = await User.findOne({
+      where: {
+        _id: jwtPayload.id,
+      },
+    });
+    if (!userDetails) {
       const customError = new CustomError(
-        400,
-        "General",
-        "Authorization header not provided"
+        401,
+        "Raw",
+        "JWT error",
+        null,
+        "No User with the ID found"
       );
       return next(customError);
+    } else {
+      req.user = userDetails;
     }
-    const token = authHeader.split(" ")[1];
-    let jwtPayload: JwtPayload;
-    try {
-      jwtPayload = jwt.verify(
-        token,
-        process.env.JWT_SECRET as string
-      ) as JwtPayload;
-      req.jwtPayload = jwtPayload;
-      req.user = jwtPayload;
-    } catch (err) {
-      const customError = new CustomError(401, "Raw", "JWT error", null, err);
+  } catch (err) {
+    const customError = new CustomError(401, "Raw", "JWT error", null, err);
+    return next(customError);
+  }
+  return next();
+};
+
+export const checkDeviceJwt = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const accessToken = req.get("AccessToken");
+  if (!accessToken) {
+    const customError = new CustomError(
+      400,
+      "General",
+      "AccessToken header not provided"
+    );
+    return next(customError);
+  }
+  const token = accessToken.split(" ")[1];
+  try {
+    const jwtPayload = jwt.verify(
+      token,
+      process.env.JWT_DEVICE_SECRET_KEY as string
+    ) as JwtDevicePayload;
+    req.jwtPayload = jwtPayload;
+    const device: IDevice | null = await Device.findOne({
+      where: {
+        _id: jwtPayload.id,
+      },
+    });
+    if (!device) {
+      const customError = new CustomError(
+        401,
+        "Raw",
+        "JWT error",
+        null,
+        "No Device with the ID found"
+      );
       return next(customError);
+    } else {
+      req.device = device;
     }
-    return next();
-  };
+  } catch (err) {
+    const customError = new CustomError(401, "Raw", "JWT error", null, err);
+    return next(customError);
+  }
+  return next();
+};

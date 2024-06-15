@@ -1,4 +1,4 @@
-import { deactiveUser, deleteUser } from "controllers/admin/deleteUser";
+import { deactiveUser, deleteUser } from "controllers/index";
 import { Router } from "express";
 import { checkJwt } from "utils/createJwtToken";
 

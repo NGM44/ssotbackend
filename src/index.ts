@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import routes from "routes/routes";
 import { errorHandler } from "utils/errorHandler";
 import "./utils/response/customSuccess";
+import logger from "utils/logger";
 
 dotenv.config();
 const app = express();
@@ -29,11 +30,12 @@ axios.interceptors.response.use((response) => {
 });
 app.use(cors({ origin: "*" }));
 app.use(express.json());
-mongoose.connect(process.env.MONGO_DB_URL || "")
+mongoose.connect(process.env.MONGO_DB_URL || "",{dbName: process.env.MONGO_DB_NAME || "vayuguna"})
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log(err));
 app.listen(port, () => {
   app.use("/", routes);
   app.use(errorHandler);
-  return console.log(`Listening on port ${port}...`);
+  logger.info(`Listening on port: ${port}`);
+  return console.log(`Listening on port: ${port}`);
 });
