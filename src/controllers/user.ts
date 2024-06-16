@@ -7,8 +7,8 @@ import { IUser, Role } from "types/mongodb";
 
 import { SendEmailDto, emailTemplatesFolder, sendEmail } from "utils/email";
 import { readFileSync } from "fs";
-import { CustomError } from "../utils/response/custom-error/CustomError";
 import logger from "utils/logger";
+import { CustomError } from "../utils/response/custom-error/CustomError";
 
 export const signUp = async (
   req: Request,
@@ -43,7 +43,10 @@ export const signUp = async (
       role: newUser.role,
     };
     const token = createAccessToken(jwtPayload);
-    return res.customSuccess(200, "User successfully created.", { ...newUser, token });
+    return res.customSuccess(200, "User successfully created.", {
+      ...newUser,
+      token,
+    });
   } catch (err) {
     const customError = new CustomError(
       400,
@@ -78,7 +81,7 @@ export const generateCredentials = async (
       password: hashedPassword,
     });
     let html = readFileSync(
-      `${emailTemplatesFolder  }credentials-generated.html`,
+      `${emailTemplatesFolder}credentials-generated.html`,
     ).toString();
     html = html.replace("#email#", existingUser.email);
     html = html.replace("#password#", password);
@@ -178,7 +181,11 @@ export const deactiveUser = async (
       );
       return next(customError);
     }
-    return res.customSuccess(200, "User Deactivated Successfully.", updatedUser);
+    return res.customSuccess(
+      200,
+      "User Deactivated Successfully.",
+      updatedUser,
+    );
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
@@ -233,15 +240,13 @@ export const login = async (
 export const changePassword = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { currentPassword, passwordNew } = req.body;
   const userId = req.user?.id || "";
   logger.info(`User with user id ${userId} is trying to change password`);
   try {
-    const user = await User.findById(
-      userId,
-    );
+    const user = await User.findById(userId);
     if (!user) {
       const customError = new CustomError(404, "General", "Not Found", [
         "User not found!",
@@ -251,7 +256,7 @@ export const changePassword = async (
     if (currentPassword) {
       const currentPswdMatched = checkIfPasswordMatch(
         currentPassword,
-        user.password
+        user.password,
       );
 
       if (!currentPswdMatched) {
@@ -259,17 +264,14 @@ export const changePassword = async (
           400,
           "General",
           "Incorrect old password",
-          ["Incorrect old password"]
+          ["Incorrect old password"],
         );
         return next(customError);
       }
     }
     const changedPassword = bcrypt.hashSync(passwordNew, 8);
     try {
-      await User.updateOne(
-        {id: user.id},
-        {password: changedPassword}
-      );
+      await User.updateOne({ id: user.id }, { password: changedPassword });
       return res.customSuccess(200, "password successfully changed");
     } catch (error) {
       const customError = new CustomError(
@@ -277,7 +279,7 @@ export const changePassword = async (
         "Raw",
         "Password could not be updated",
         null,
-        error
+        error,
       );
       return next(customError);
     }
@@ -287,16 +289,14 @@ export const changePassword = async (
       "Raw",
       "Password could not be updated",
       null,
-      error
+      error,
     );
     return next(customError);
   }
 };
 
-const checkIfPasswordMatch = (
-  unencryptedPassword: string,
-  password: string,
-) => bcrypt.compareSync(unencryptedPassword, password);
+const checkIfPasswordMatch = (unencryptedPassword: string, password: string) =>
+  bcrypt.compareSync(unencryptedPassword, password);
 
 function generateRandomPassword() {
   return Math.random().toString(36).slice(-8);

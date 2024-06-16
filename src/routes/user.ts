@@ -24,6 +24,6 @@ router.delete("/", deleteUser);
 router.get("/all", checkJwt, getAllUsers);
 router.get("/deactive", checkJwt, deactiveUser);
 router.post("/login", login);
-router.post("/changePassword",changePassword)
+router.post("/changePassword", changePassword);
 
 export default router;

@@ -5,12 +5,14 @@ import { IDevice, IUser } from "types/mongodb";
 import { JwtUserPayload, JwtDevicePayload } from "../types/jwtPayload";
 import { CustomError } from "./response/custom-error/CustomError";
 
-export const createAccessToken = (payload: JwtUserPayload): string => jwt.sign(payload, process.env.JWT_USER_SECRET_KEY as string, {
+export const createAccessToken = (payload: JwtUserPayload): string =>
+  jwt.sign(payload, process.env.JWT_USER_SECRET_KEY as string, {
     expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION,
     algorithm: "HS512",
   });
 
-export const createDeviceAccessToken = (payload: JwtDevicePayload): string => jwt.sign(payload, process.env.JWT_DEVICE_SECRET_KEY as string, {
+export const createDeviceAccessToken = (payload: JwtDevicePayload): string =>
+  jwt.sign(payload, process.env.JWT_DEVICE_SECRET_KEY as string, {
     algorithm: "HS512",
   });
 

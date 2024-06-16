@@ -1,6 +1,7 @@
 import { Device, WeatherData } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { IWeatherData } from "types/mongodb";
+import { reportGenerator } from "utils/report";
 import { CustomError } from "utils/response/custom-error/CustomError";
 import { wss } from "websocket";
 
@@ -73,6 +74,21 @@ export const createDataFromPostman = async (
     }
     await WeatherData.insertMany(data);
     return res.customSuccess(200, "Created Successfully");
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};
+
+export const generateReport = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const json = req.body;
+    const base64File = await reportGenerator(json);
+    return res.customSuccess(200, "success", base64File);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
