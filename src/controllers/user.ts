@@ -1,12 +1,12 @@
 import bcrypt from "bcryptjs";
-import { Device, User, WeatherData } from "db/mongodb";
+import { User } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { JwtUserPayload } from "types/jwtPayload";
-import { createAccessToken } from "utils/createJwtToken";
 import { IUser, Role } from "types/mongodb";
+import { createAccessToken } from "utils/createJwtToken";
 
-import { SendEmailDto, emailTemplatesFolder, sendEmail } from "utils/email";
 import { readFileSync } from "fs";
+import { SendEmailDto, emailTemplatesFolder, sendEmail } from "utils/email";
 import logger from "utils/logger";
 import { CustomError } from "../utils/response/custom-error/CustomError";
 
@@ -110,22 +110,19 @@ export const deleteUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const email = req.query.email?.toString();
-  const userName = req.query.userName?.toString();
+  const id = req.body.id;
   try {
-    if (!email && !userName) {
+    if (!id) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
     }
-    const user = await User.findOne({
-      $or: [{ email }, { name: userName }],
-    });
+    const user = await User.findOne({id});
     if (!user) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
     }
-    const deletedUser = await User.findByIdAndDelete(user._id);
-    return res.customSuccess(200, "User Deleted Successfully.", deletedUser);
+    await User.deleteOne({id:user.id});
+    return res.customSuccess(200, "User Deleted Successfully.");
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
@@ -152,17 +149,13 @@ export const deactiveUser = async (
   next: NextFunction,
 ) => {
   const email = req.query.email?.toString();
-  const userName = req.query.userName?.toString();
-  const deactivated = req.query.block !== "false";
+  const deactivated = req.query.deactivated !== "false";
   try {
-    if (!email && !userName) {
+    if (!email) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
     }
-    const user = await User.findOne({
-      $or: [{ email }, { name: userName }],
-    });
-
+    const user = await User.findOne({email});
     if (!user) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
@@ -215,10 +208,10 @@ export const login = async (
     };
     try {
       const token = createAccessToken(jwtPayload);
-      const loginResponse = { token: `Bearer ${token}` };
+      const loginResponse = { id: jwtPayload.id,token: `Bearer ${token}` };
       return res.customSuccess(
         200,
-        "Access Token Generated Successfully.",
+        "Logged in successfully",
         loginResponse,
       );
     } catch (err) {
@@ -242,7 +235,7 @@ export const changePassword = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { currentPassword, passwordNew } = req.body;
+  const { currentPassword,  newPassword } = req.body;
   const userId = req.user?.id || "";
   logger.info(`User with user id ${userId} is trying to change password`);
   try {
@@ -269,7 +262,7 @@ export const changePassword = async (
         return next(customError);
       }
     }
-    const changedPassword = bcrypt.hashSync(passwordNew, 8);
+    const changedPassword = bcrypt.hashSync(newPassword, 8);
     try {
       await User.updateOne({ id: user.id }, { password: changedPassword });
       return res.customSuccess(200, "password successfully changed");

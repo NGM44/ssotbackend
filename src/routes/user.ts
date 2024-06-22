@@ -1,10 +1,4 @@
 import {
-  connectDeviceWithUser,
-  getAllDevices,
-  registerDevice as register,
-  updateStatus,
-} from "controllers/device";
-import {
   changePassword,
   deactiveUser,
   deleteUser,
@@ -20,7 +14,7 @@ const router = Router();
 
 router.post("/signUp", signUp);
 router.post("/generateCredentials", checkJwt, generateCredentials);
-router.delete("/", deleteUser);
+router.delete("/", checkJwt, deleteUser);
 router.get("/all", checkJwt, getAllUsers);
 router.get("/deactive", checkJwt, deactiveUser);
 router.post("/login", login);
