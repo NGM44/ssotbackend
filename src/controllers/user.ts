@@ -17,9 +17,7 @@ export const signUp = async (
 ) => {
   const { email, role, name } = req.body;
   const existingUser = await User.findOne({
-    where: {
-      email,
-    },
+    email,
   });
   if (existingUser) {
     const customError = new CustomError(409, "General", "User already exists");
@@ -66,9 +64,7 @@ export const generateCredentials = async (
 ) => {
   const { email } = req.body;
   const existingUser = await User.findOne({
-    where: {
-      email,
-    },
+    email,
   });
   if (!existingUser) {
     const customError = new CustomError(400, "General", "User doesn't exist");
@@ -77,7 +73,7 @@ export const generateCredentials = async (
   const password = generateRandomPassword();
   try {
     const hashedPassword = bcrypt.hashSync(password, 8);
-    await User.findByIdAndUpdate(existingUser._id, {
+    await User.findByIdAndUpdate(existingUser.id, {
       password: hashedPassword,
     });
     let html = readFileSync(
@@ -116,12 +112,12 @@ export const deleteUser = async (
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
     }
-    const user = await User.findOne({id});
+    const user = await User.findOne({ id });
     if (!user) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
     }
-    await User.deleteOne({id:user.id});
+    await User.deleteOne({ id: user.id });
     return res.customSuccess(200, "User Deleted Successfully.");
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
@@ -155,14 +151,14 @@ export const deactiveUser = async (
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
     }
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
     if (!user) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
     }
 
     const updatedUser: IUser | null = await User.findByIdAndUpdate(
-      user._id,
+      user.id,
       { deactivated },
       { new: true },
     );
@@ -208,12 +204,8 @@ export const login = async (
     };
     try {
       const token = createAccessToken(jwtPayload);
-      const loginResponse = { id: jwtPayload.id,token: `Bearer ${token}` };
-      return res.customSuccess(
-        200,
-        "Logged in successfully",
-        loginResponse,
-      );
+      const loginResponse = { id: jwtPayload.id, token: `Bearer ${token}` };
+      return res.customSuccess(200, "Logged in successfully", loginResponse);
     } catch (err) {
       const customError = new CustomError(
         500,
@@ -235,7 +227,7 @@ export const changePassword = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { currentPassword,  newPassword } = req.body;
+  const { currentPassword, newPassword } = req.body;
   const userId = req.user?.id || "";
   logger.info(`User with user id ${userId} is trying to change password`);
   try {

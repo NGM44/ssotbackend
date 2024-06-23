@@ -25,7 +25,7 @@ export const postData = async (
         humidity: req.body.humidity,
         deviceId: req.device.id,
       };
-      WeatherData.create(data);
+      await WeatherData.create(data);
     }
     return res.customSuccess(200, "Created Successfully");
   } catch (err) {
@@ -42,7 +42,7 @@ export const getData = async (
   try {
     const data: IWeatherData[] = await WeatherData.find(
       { timestamp: { $lt: new Date(), $gt: new Date("2024-06-01") } },
-      { timestamp: 1, humidity: 1, temperature: 1, _id: 0 },
+      { timestamp: 1, humidity: 1, temperature: 1, _id: 0, id: 0 },
     );
     return res.customSuccess(200, "Fetched Successfully", data);
   } catch (err) {

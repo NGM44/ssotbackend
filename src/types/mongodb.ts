@@ -1,6 +1,7 @@
 import { Document } from "mongoose";
 
 export interface IWeatherData extends Document {
+  id: string;
   temperature: number;
   humidity: number;
   timestamp: Date;
@@ -25,6 +26,7 @@ export enum Status {
 }
 
 export interface IUser extends Document {
+  id: string;
   name: string;
   email: string;
   password: string;
@@ -35,6 +37,7 @@ export interface IUser extends Document {
 }
 
 export interface IDevice extends Document {
+  id: string;
   name: string;
   identifier: string;
   status: string;

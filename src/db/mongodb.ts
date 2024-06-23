@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { IDevice, IUser, IWeatherData, Role, Status } from "types/mongodb";
+import { v4 as uuid } from "uuid";
 
 const { Schema } = mongoose;
 
@@ -16,12 +17,13 @@ const statuses = [
 
 const userSchema = new Schema(
   {
+    id: { type: String, default: uuid(), unique: true, required: true },
     name: { type: String, unique: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     deactivated: { type: Boolean, default: false },
     role: { type: String, enum: roles, required: true },
-    devices: [{ type: Schema.Types.ObjectId, ref: "UserDeviceMapping" }],
+    devices: [{ type: String, ref: "UserDeviceMapping" }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
@@ -32,11 +34,11 @@ const userSchema = new Schema(
 
 const deviceSchema = new Schema(
   {
+    id: { type: String, default: uuid(), unique: true, required: true },
     name: { type: String, required: true },
     identifier: { type: String, required: true },
     status: { type: String, enum: statuses, required: true },
     modelType: { type: String, required: true },
-    userDevices: [{ type: Schema.Types.ObjectId, ref: "UserDeviceMapping" }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
@@ -47,8 +49,9 @@ const deviceSchema = new Schema(
 
 const userDeviceMappingSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    deviceId: { type: Schema.Types.ObjectId, ref: "Device", required: true },
+    id: { type: String, default: uuid(), unique: true, required: true },
+    userId: { type: String, ref: "User", required: true },
+    deviceId: { type: String, ref: "Device", required: true },
     isDefault: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
@@ -62,10 +65,11 @@ userDeviceMappingSchema.index({ deviceId: 1, userId: 1 }, { unique: true });
 
 const weatherDataSchema = new Schema(
   {
+    id: { type: String, default: uuid(), unique: true, required: true },
     temperature: { type: Number, required: true },
     humidity: { type: Number, required: true },
     timestamp: { type: Date, default: Date.now },
-    deviceId: { type: Schema.Types.ObjectId, ref: "Device", required: true },
+    deviceId: { type: String, ref: "Device", required: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
