@@ -11,14 +11,15 @@ export const registerDevice = async (
 ) => {
   try {
     const { identifier, modelType } = req.body;
-    await Device.create({
+    //validate if identifier already exists
+    const device = await Device.create({
       modelType,
       identifier,
       name: identifier,
       status: Status.REGISTERED,
     });
     logger.info("Device Registered successfully");
-    return res.customSuccess(200, "Device Registered successfully");
+    return res.customSuccess(200, "Device Registered successfully", device.id);
   } catch (err) {
     const customError = new CustomError(
       400,
@@ -134,6 +135,7 @@ export const updateStatus = async (
   try {
     const stateToBeUpdated = req.body.state as Status;
     const deviceId = req.body.deviceId;
+    // validate if stateToBeUpdated is valid for current device state.
     await Device.findOneAndUpdate({ deviceId }, { status: stateToBeUpdated });
     if (stateToBeUpdated === Status.UNREGISTERED) {
       await UserDeviceMapping.deleteMany({ deviceId });

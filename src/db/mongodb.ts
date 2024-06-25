@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { IDevice, IUser, IWeatherData, Role, Status } from "types/mongodb";
-import { v4 as uuid } from "uuid";
+import { ulid } from "ulid";
 
 const { Schema } = mongoose;
 
@@ -17,7 +17,7 @@ const statuses = [
 
 const userSchema = new Schema(
   {
-    id: { type: String, default: uuid(), unique: true, required: true },
+    id: { type: String, default: ulid(), unique: true, required: true },
     name: { type: String, unique: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
@@ -34,7 +34,7 @@ const userSchema = new Schema(
 
 const deviceSchema = new Schema(
   {
-    id: { type: String, default: uuid(), unique: true, required: true },
+    id: { type: String, default: ulid(), unique: true, required: true },
     name: { type: String, required: true },
     identifier: { type: String, required: true },
     status: { type: String, enum: statuses, required: true },
@@ -49,7 +49,7 @@ const deviceSchema = new Schema(
 
 const userDeviceMappingSchema = new Schema(
   {
-    id: { type: String, default: uuid(), unique: true, required: true },
+    id: { type: String, default: ulid(), unique: true, required: true },
     userId: { type: String, ref: "User", required: true },
     deviceId: { type: String, ref: "Device", required: true },
     isDefault: { type: Boolean, default: false },
@@ -65,7 +65,7 @@ userDeviceMappingSchema.index({ deviceId: 1, userId: 1 }, { unique: true });
 
 const weatherDataSchema = new Schema(
   {
-    id: { type: String, default: uuid(), unique: true, required: true },
+    id: { type: String, default: ulid(), unique: true, required: true },
     temperature: { type: Number, required: true },
     humidity: { type: Number, required: true },
     timestamp: { type: Date, default: Date.now },
