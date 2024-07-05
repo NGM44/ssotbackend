@@ -3,7 +3,7 @@ import logger from "./logger";
 
 sendGridMail.setApiKey(process.env.SENDGRID_API_KEY || "SG.FAKE");
 
-export const emailTemplatesFolder = `${process.cwd()}/src/controller/template/emailTemplates/`;
+export const emailTemplatesFolder = `${process.cwd()}/src/controllers/template/emailTemplates/`;
 
 export type SendEmailDto = {
   from: string;

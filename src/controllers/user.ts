@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { User } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { JwtUserPayload } from "types/jwtPayload";
-import { IUser, Role } from "types/mongodb";
+import { IUser, ERole } from "types/mongodb";
 import { createAccessToken } from "utils/createJwtToken";
 
 import { readFileSync } from "fs";
@@ -17,13 +17,13 @@ export const signUp = async (
 ) => {
   const { email, role, name } = req.body;
   const existingUser = await User.findOne({
-    email,
+    email,role
   });
   if (existingUser) {
     const customError = new CustomError(409, "General", "User already exists");
     return next(customError);
   }
-  const userRole = role ?? Role.USER;
+  const userRole = role ?? ERole.USER;
 
   const password = generateRandomPassword();
   try {
@@ -286,3 +286,52 @@ const checkIfPasswordMatch = (unencryptedPassword: string, password: string) =>
 function generateRandomPassword() {
   return Math.random().toString(36).slice(-8);
 }
+
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({
+      where: { email },
+    });
+    if (!user) {
+      const customError = new CustomError(404, "General", "User not Found", [
+        "User not found!",
+      ]);
+      next(customError);
+    }
+    if (user?.deactivated) {
+      const customError = new CustomError(
+        404,
+        "General",
+        "Account has been Deactivated",
+        ["Account has been Deactivated"]
+      );
+      return next(customError);
+    }
+    if(user){
+      let html = readFileSync(
+        `${emailTemplatesFolder}forgot-password.html`,
+      ).toString();
+      html = html.replace("#email#", user.email);
+      html = html.replace("#name#", user.name);
+      const sendEmailDto: SendEmailDto = {
+        from: "sahilymenda@gmail.com",
+        to: user.email,
+        html,
+        subject: "Credentails Generated",
+      };
+      await sendEmail(sendEmailDto);
+    }
+    return res.customSuccess(
+      200,
+      "Reset Passsword link has been shared through mail"
+    );
+  } catch (error) {
+    const customError = new CustomError(500, "Raw", "Error", null, error);
+    return next(customError);
+  }
+};

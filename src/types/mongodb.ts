@@ -10,12 +10,12 @@ export interface IWeatherData extends Document {
   updatedAt: Date;
 }
 
-export enum Role {
+export enum ERole {
   ADMIN = "ADMIN",
   USER = "USER",
 }
 
-export enum Status {
+export enum EStatus {
   REGISTERED = "REGISTERED",
   CONNECTED = "CONNECTED",
   ACTIVATED = "ACTIVATED",
@@ -31,7 +31,19 @@ export interface IUser extends Document {
   email: string;
   password: string;
   deactivated: boolean;
-  role: Role;
+  role: ERole;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IClient extends Document {
+  id: string;
+  name: string;
+  logo: string;
+  address: string;
+  email: string;
+  phone: string;
+  website: string;
   createdAt: Date;
   updatedAt: Date;
 }

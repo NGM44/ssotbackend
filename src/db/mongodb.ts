@@ -1,18 +1,18 @@
 import mongoose from "mongoose";
-import { IDevice, IUser, IWeatherData, Role, Status } from "types/mongodb";
+import { IClient, IDevice, IUser, IWeatherData, ERole, EStatus } from "types/mongodb";
 import { ulid } from "ulid";
 
 const { Schema } = mongoose;
 
-const roles = [Role.ADMIN, Role.USER];
+const roles = [ERole.ADMIN, ERole.USER];
 const statuses = [
-  Status.REGISTERED,
-  Status.CONNECTED,
-  Status.ACTIVATED,
-  Status.DEACTIVATED,
-  Status.BLOCKED,
-  Status.UNREGISTERED,
-  Status.TERMINATED,
+  EStatus.REGISTERED,
+  EStatus.CONNECTED,
+  EStatus.ACTIVATED,
+  EStatus.DEACTIVATED,
+  EStatus.BLOCKED,
+  EStatus.UNREGISTERED,
+  EStatus.TERMINATED,
 ];
 
 const userSchema = new Schema(
@@ -23,13 +23,29 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     deactivated: { type: Boolean, default: false },
     role: { type: String, enum: roles, required: true },
-    devices: [{ type: String, ref: "UserDeviceMapping" }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
   },
+);
+
+const clientSchema = new Schema(
+  {
+    id: { type: String, default: ulid(), unique: true, required: true },
+    name: { type: String, unique: true },
+    logo: { type: String },
+    address: { type: String },
+    email: { type: String, required: true },
+    phone: { type: String },
+    website: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
+  }
 );
 
 const deviceSchema = new Schema(
@@ -52,6 +68,7 @@ const userDeviceMappingSchema = new Schema(
     id: { type: String, default: ulid(), unique: true, required: true },
     userId: { type: String, ref: "User", required: true },
     deviceId: { type: String, ref: "Device", required: true },
+    clientId: { type: String, ref: "Client", required: true },
     isDefault: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
@@ -61,7 +78,7 @@ const userDeviceMappingSchema = new Schema(
   },
 );
 
-userDeviceMappingSchema.index({ deviceId: 1, userId: 1 }, { unique: true });
+userDeviceMappingSchema.index({ deviceId: 1, userId: 1 , clientId: 1}, { unique: true });
 
 const weatherDataSchema = new Schema(
   {
@@ -82,6 +99,7 @@ const weatherDataSchema = new Schema(
   },
 );
 const User = mongoose.model<IUser>("User", userSchema);
+const Client = mongoose.model<IClient>("Client", clientSchema);
 const Device = mongoose.model<IDevice>("Device", deviceSchema);
 const UserDeviceMapping = mongoose.model(
   "UserDeviceMapping",
@@ -92,4 +110,4 @@ const WeatherData = mongoose.model<IWeatherData>(
   weatherDataSchema,
 );
 
-export { Device, User, UserDeviceMapping, WeatherData };
+export { Client, Device, User, UserDeviceMapping, WeatherData };

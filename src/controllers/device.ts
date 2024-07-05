@@ -1,6 +1,6 @@
 import { Device, UserDeviceMapping } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { Status } from "types/mongodb";
+import { EStatus } from "types/mongodb";
 import logger from "utils/logger";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
@@ -11,12 +11,16 @@ export const registerDevice = async (
 ) => {
   try {
     const { identifier, modelType } = req.body;
-    //validate if identifier already exists
+    const existingDevice = await Device.findOne({identifier});
+    if(existingDevice){
+      const customError = new CustomError(409, "General", "Devuce already exists");
+      return next(customError);
+    }
     const device = await Device.create({
       modelType,
       identifier,
       name: identifier,
-      status: Status.REGISTERED,
+      status: EStatus.REGISTERED,
     });
     logger.info("Device Registered successfully");
     return res.customSuccess(200, "Device Registered successfully", device.id);
@@ -32,41 +36,6 @@ export const registerDevice = async (
   }
 };
 
-// export const getRegisteredDeviceDetails = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const identifier = req.query.identifier as string;
-//     const device: IDevice | null = await Device.findOne({ identifier });
-//     if (!device) {
-//       logger.error("No device found , please register");
-//       const customError = new CustomError(
-//         400,
-//         "Raw",
-//         "No device found , please register",
-//         null,
-//         "No device found , please register"
-//       );
-//       return next(customError);
-//     } else {
-//       return res.customSuccess(200, "Device fetched successfully", {
-//         device,
-//       });
-//     }
-//   } catch (err) {
-//     const customError = new CustomError(
-//       400,
-//       "Raw",
-//       "Cannot register device",
-//       null,
-//       err
-//     );
-//     return next(customError);
-//   }
-// };
-
 export const connectDeviceWithUser = async (
   req: Request,
   res: Response,
@@ -75,8 +44,21 @@ export const connectDeviceWithUser = async (
   try {
     const userId = req.user?.id;
     const deviceId = req.body.deviceId;
-    await UserDeviceMapping.create({ deviceId, userId, isDefault: true });
-    await Device.updateOne({ deviceId }, { status: Status.CONNECTED });
+    const clientId = req.body.clientId;
+    if(!userId){
+      const customError = new CustomError(409, "General", "User not found");
+      return next(customError);
+    }
+    if(!deviceId){
+      const customError = new CustomError(409, "General", "Device not found");
+      return next(customError);
+    }
+    if(!clientId){
+      const customError = new CustomError(409, "General", "Client not found");
+      return next(customError);
+    }
+    await UserDeviceMapping.create({ deviceId, userId, clientId, isDefault: true });
+    await Device.updateOne({ deviceId }, { status: EStatus.CONNECTED });
     return res.customSuccess(200, "Device connected successfully");
   } catch (err) {
     const customError = new CustomError(
@@ -90,54 +72,17 @@ export const connectDeviceWithUser = async (
   }
 };
 
-// export const getConnectedDeviceDetails = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const identifier = req.query.identifier;
-//     const device: IDevice | null = await Device.findOne({ identifier });
-//     if (!device) {
-//       logger.error("No device found , please register");
-//       const customError = new CustomError(
-//         400,
-//         "Raw",
-//         "No device found , please register",
-//         null,
-//         "No device found , please register"
-//       );
-//       return next(customError);
-//     }
-//     const jwtPayload: JwtDevicePayload = {
-//       id: device.id,
-//       status: device.status,
-//     };
-//     const token = createDeviceAccessToken(jwtPayload);
-//     return res.customSuccess(200, "Access Token Generated Successfully.", { token });
-//   } catch (err) {
-//     const customError = new CustomError(
-//       400,
-//       "Raw",
-//       "Cannot connect device",
-//       null,
-//       err
-//     );
-//     return next(customError);
-//   }
-// };
-
 export const updateStatus = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const stateToBeUpdated = req.body.state as Status;
+    const stateToBeUpdated = req.body.state as EStatus;
     const deviceId = req.body.deviceId;
     // validate if stateToBeUpdated is valid for current device state.
     await Device.findOneAndUpdate({ deviceId }, { status: stateToBeUpdated });
-    if (stateToBeUpdated === Status.UNREGISTERED) {
+    if (stateToBeUpdated === EStatus.UNREGISTERED) {
       await UserDeviceMapping.deleteMany({ deviceId });
     }
     return res.customSuccess(200, "Device status updated Successfully.");

@@ -2,6 +2,7 @@ import {
   changePassword,
   deactiveUser,
   deleteUser,
+  forgotPassword,
   generateCredentials,
   getAllUsers,
   login,
@@ -19,5 +20,6 @@ router.get("/all", checkJwt, getAllUsers);
 router.get("/deactive", checkJwt, deactiveUser);
 router.post("/login", login);
 router.post("/changePassword", changePassword);
+router.post("/forgotPassword", forgotPassword);
 
 export default router;
