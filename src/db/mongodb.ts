@@ -23,6 +23,7 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     deactivated: { type: Boolean, default: false },
     role: { type: String, enum: roles, required: true },
+    clientId: { type: String, ref: "Client", required: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
@@ -78,7 +79,7 @@ const userDeviceMappingSchema = new Schema(
   },
 );
 
-userDeviceMappingSchema.index({ deviceId: 1, userId: 1 , clientId: 1}, { unique: true });
+userDeviceMappingSchema.index({ deviceId: 1, userId: 1 }, { unique: true });
 
 const weatherDataSchema = new Schema(
   {

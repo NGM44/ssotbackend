@@ -4,26 +4,65 @@ import { NextFunction, Request, Response } from "express";
 import { JwtUserPayload } from "types/jwtPayload";
 import { IUser, ERole } from "types/mongodb";
 import { createAccessToken } from "utils/createJwtToken";
-
 import { readFileSync } from "fs";
 import { SendEmailDto, emailTemplatesFolder, sendEmail } from "utils/email";
 import logger from "utils/logger";
 import { CustomError } from "../utils/response/custom-error/CustomError";
 
-export const signUp = async (
+export const userSignUp = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const { email, role, name } = req.body;
+  const { email, name, clientId } = req.body;
   const existingUser = await User.findOne({
-    email,role
+    email
   });
   if (existingUser) {
     const customError = new CustomError(409, "General", "User already exists");
     return next(customError);
   }
-  const userRole = role ?? ERole.USER;
+  if(!clientId){
+    const customError = new CustomError(409, "General", "Cannot create user without client ID");
+    return next(customError);
+  }
+  const password = generateRandomPassword();
+  try {
+    const hashedPassword = bcrypt.hashSync(password, 8);
+    const data = {
+      name,
+      email,
+      clientId,
+      password: hashedPassword,
+      role: ERole.USER,
+    };
+    await User.create(data);
+    return res.customSuccess(200, "User successfully created.");
+  } catch (err) {
+    const customError = new CustomError(
+      400,
+      "Raw",
+      `User '${email}' can't be created`,
+      null,
+      err,
+    );
+    return next(customError);
+  }
+};
+
+export const adminSignUp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { email, name, clientId } = req.body;
+  const existingUser = await User.findOne({
+    email
+  });
+  if (existingUser) {
+    const customError = new CustomError(409, "General", "User already exists");
+    return next(customError);
+  }
 
   const password = generateRandomPassword();
   try {
@@ -32,19 +71,10 @@ export const signUp = async (
       name,
       email,
       password: hashedPassword,
-      role: userRole,
+      role: ERole.ADMIN,
     };
-    const newUser = await User.create(data);
-    const jwtPayload: JwtUserPayload = {
-      id: String(newUser.id),
-      email: newUser.email,
-      role: newUser.role,
-    };
-    const token = createAccessToken(jwtPayload);
-    return res.customSuccess(200, "User successfully created.", {
-      ...newUser,
-      token,
-    });
+    await User.create(data);
+    return res.customSuccess(200, "User successfully created");
   } catch (err) {
     const customError = new CustomError(
       400,
@@ -131,7 +161,7 @@ export const getAllUsers = async (
   next: NextFunction,
 ) => {
   try {
-    const users = await User.find();
+    const users: IUser[] = await User.find({id: 1, name: 1, _id: 0, email: 1, deactivated: 1, role: 1, clientId: 1 , password: 0});
     return res.customSuccess(200, "Users Fetched Successfully.", users);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
@@ -188,7 +218,7 @@ export const login = async (
 ) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email, deactivated: false });
+    const user: IUser | null = await User.findOne({ email, deactivated: false });
     if (!user) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
@@ -231,7 +261,7 @@ export const changePassword = async (
   const userId = req.user?.id || "";
   logger.info(`User with user id ${userId} is trying to change password`);
   try {
-    const user = await User.findById(userId);
+    const user: IUser | null = await User.findById(userId);
     if (!user) {
       const customError = new CustomError(404, "General", "Not Found", [
         "User not found!",
@@ -294,14 +324,14 @@ export const forgotPassword = async (
 ) => {
   const { email } = req.body;
   try {
-    const user = await User.findOne({
+    const user: IUser | null = await User.findOne({
       where: { email },
     });
     if (!user) {
       const customError = new CustomError(404, "General", "User not Found", [
         "User not found!",
       ]);
-      next(customError);
+      return next(customError);
     }
     if (user?.deactivated) {
       const customError = new CustomError(

@@ -32,6 +32,7 @@ export interface IUser extends Document {
   password: string;
   deactivated: boolean;
   role: ERole;
+  clientId: string;
   createdAt: Date;
   updatedAt: Date;
 }

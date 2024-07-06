@@ -1,4 +1,5 @@
 import {
+  adminSignUp,
   changePassword,
   deactiveUser,
   deleteUser,
@@ -6,14 +7,15 @@ import {
   generateCredentials,
   getAllUsers,
   login,
-  signUp,
+  userSignUp,
 } from "controllers/user";
 import { Router } from "express";
 import { checkJwt } from "utils/createJwtToken";
 
 const router = Router();
 
-router.post("/signUp", signUp);
+router.post("/signUp", userSignUp);
+router.post("/adminSignUp", adminSignUp);
 router.post("/generateCredentials", checkJwt, generateCredentials);
 router.delete("/", checkJwt, deleteUser);
 router.get("/all", checkJwt, getAllUsers);
