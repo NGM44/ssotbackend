@@ -7,14 +7,14 @@ import {
   generateCredentials,
   getAllUsers,
   login,
-  userSignUp,
+  signUp,
 } from "controllers/user";
 import { Router } from "express";
 import { checkJwt } from "utils/createJwtToken";
 
 const router = Router();
 
-router.post("/signUp", userSignUp);
+router.post("/signUp", signUp);
 router.post("/adminSignUp", adminSignUp);
 router.post("/generateCredentials", checkJwt, generateCredentials);
 router.delete("/", checkJwt, deleteUser);

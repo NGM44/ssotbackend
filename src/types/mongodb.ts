@@ -49,12 +49,18 @@ export interface IClient extends Document {
   updatedAt: Date;
 }
 
+export interface IClientDto extends Omit<IClient, keyof Document> {
+  users: IUser[],
+  devices: IDevice[]
+}
+
 export interface IDevice extends Document {
   id: string;
   name: string;
   identifier: string;
   status: string;
   modelType: string;
+  clientId: string;
   createdAt: Date;
   updatedAt: Date;
 }

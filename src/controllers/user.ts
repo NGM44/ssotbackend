@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { User } from "db/mongodb";
+import { User, UserDeviceMapping } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { JwtUserPayload } from "types/jwtPayload";
 import { IUser, ERole } from "types/mongodb";
@@ -9,7 +9,7 @@ import { SendEmailDto, emailTemplatesFolder, sendEmail } from "utils/email";
 import logger from "utils/logger";
 import { CustomError } from "../utils/response/custom-error/CustomError";
 
-export const userSignUp = async (
+export const signUp = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -55,7 +55,7 @@ export const adminSignUp = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { email, name, clientId } = req.body;
+  const { email, name } = req.body;
   const existingUser = await User.findOne({
     email
   });
@@ -103,11 +103,11 @@ export const generateCredentials = async (
   const password = generateRandomPassword();
   try {
     const hashedPassword = bcrypt.hashSync(password, 8);
-    await User.findByIdAndUpdate(existingUser.id, {
+    await User.findOneAndUpdate({id: existingUser.id}, {
       password: hashedPassword,
     });
     let html = readFileSync(
-      `${emailTemplatesFolder}credentials-generated.html`,
+      `/Users/sahilmenda/Personal/ssotbackend/src/controllers/templates/emailTemplates/credentials-generated.html`,
     ).toString();
     html = html.replace("#email#", existingUser.email);
     html = html.replace("#password#", password);
@@ -148,6 +148,7 @@ export const deleteUser = async (
       return next(customError);
     }
     await User.deleteOne({ id: user.id });
+    await UserDeviceMapping.deleteMany({userId: user.id});
     return res.customSuccess(200, "User Deleted Successfully.");
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
@@ -187,8 +188,8 @@ export const deactiveUser = async (
       return next(customError);
     }
 
-    const updatedUser: IUser | null = await User.findByIdAndUpdate(
-      user.id,
+    const updatedUser: IUser | null = await User.findOneAndUpdate(
+      {id:user.id},
       { deactivated },
       { new: true },
     );

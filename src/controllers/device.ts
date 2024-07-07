@@ -57,7 +57,7 @@ export const connectDeviceWithUser = async (
       const customError = new CustomError(409, "General", "Client not found");
       return next(customError);
     }
-    await UserDeviceMapping.create({ deviceId, userId, clientId, isDefault: true });
+    await UserDeviceMapping.create({ deviceId, userId });
     await Device.updateOne({ deviceId }, { status: EStatus.CONNECTED });
     return res.customSuccess(200, "Device connected successfully");
   } catch (err) {
