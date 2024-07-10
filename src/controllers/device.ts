@@ -113,7 +113,7 @@ export const updateStatus = async (
     const stateToBeUpdated = req.body.state as EStatus;
     const deviceId = req.body.deviceId;
     // validate if stateToBeUpdated is valid for current device state.
-    await Device.findOneAndUpdate({ deviceId }, { status: stateToBeUpdated });
+    await Device.findOneAndUpdate({ id: deviceId }, { status: stateToBeUpdated });
     if (stateToBeUpdated === EStatus.UNREGISTERED) {
       await UserDeviceMapping.deleteMany({ deviceId });
     }
