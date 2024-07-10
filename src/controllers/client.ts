@@ -66,6 +66,7 @@ export const getClient = async (
     const clientUsers: IUser[] = await User.find({ clientId });
     const clientDevices: IDevice[] = await Device.find({ clientId });
     const clientDetailsToBeSent: IClientDto = {
+      id: client.id,
       address: client.address,
         createdAt: client.createdAt,
         email: client.email,
@@ -74,8 +75,8 @@ export const getClient = async (
         phone: client.phone,
         updatedAt: client.updatedAt,
         website: client.website,
-      devices: clientDevices.map(device => ({clientId: device.clientId,createdAt: device.createdAt,identifier: device.identifier,modelType: device.modelType,name: device.name,status: device.status,updatedAt: device.updatedAt})),
-      users: clientUsers.map(user=> ({ clientId: user.clientId, createdAt: user.createdAt,deactivated: user.deactivated,email: user.email,name: user.email,password: user.password,role: user.role,updatedAt: user.updatedAt})),
+      devices: clientDevices.map(device => ({id: device.id,clientId: device.clientId,createdAt: device.createdAt,identifier: device.identifier,modelType: device.modelType,name: device.name,status: device.status,updatedAt: device.updatedAt})),
+      users: clientUsers.map(user=> ({ id: user.id,clientId: user.clientId, createdAt: user.createdAt,deactivated: user.deactivated,email: user.email,name: user.email,password: user.password,role: user.role,updatedAt: user.updatedAt})),
     };
     return res.customSuccess(
       200,
@@ -107,6 +108,7 @@ export const getAllClient = async (
       const devices = clientDevices
         .filter((d) => d.clientId === client.id)
         .map((device) => ({
+          id: device.id,
           clientId: device.clientId,
           createdAt: device.createdAt,
           identifier: device.identifier,
@@ -118,6 +120,7 @@ export const getAllClient = async (
       const users = clientUsers
         .filter((u) => u.clientId === client.id)
         .map((user) => ({
+          id: user.id,
           clientId: user.clientId,
           createdAt: user.createdAt,
           deactivated: user.deactivated,
@@ -128,6 +131,7 @@ export const getAllClient = async (
           updatedAt: user.updatedAt,
         }));
       return {
+        id: client.id,
         address: client.address,
         createdAt: client.createdAt,
         email: client.email,
