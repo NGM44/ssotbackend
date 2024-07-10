@@ -106,7 +106,17 @@ export const getAllDevices = async (
 ) => {
   try {
     const devices = await Device.find();
-    return res.customSuccess(200, "Devices Fetched Successfully.", devices);
+    const devicesToBeSent = devices.map((device) => ({
+      id: device.id,
+      clientId: device.clientId,
+      createdAt: device.createdAt,
+      identifier: device.identifier,
+      modelType: device.modelType,
+      name: device.name,
+      status: device.status,
+      updatedAt: device.updatedAt,
+    }));
+    return res.customSuccess(200, "Devices Fetched Successfully.", devicesToBeSent);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
