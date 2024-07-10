@@ -136,7 +136,7 @@ export const deleteUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const id = req.body.id;
+  const id = req.query.id;
   try {
     if (!id) {
       const customError = new CustomError(404, "General", "user not found");

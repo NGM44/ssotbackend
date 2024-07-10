@@ -17,7 +17,7 @@ const router = Router();
 router.post("/signUp", signUp);
 router.post("/adminSignUp", adminSignUp);
 router.post("/generateCredentials", checkJwt, generateCredentials);
-router.delete("/", checkJwt, deleteUser);
+router.delete("/:id", checkJwt, deleteUser);
 router.get("/all", checkJwt, getAllUsers);
 router.get("/deactive", checkJwt, deactiveUser);
 router.post("/login", login);
