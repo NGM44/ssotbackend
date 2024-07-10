@@ -3,7 +3,7 @@ import { User, UserDeviceMapping } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { JwtUserPayload } from "types/jwtPayload";
 import { IUser, ERole } from "types/mongodb";
-import { createAccessToken } from "utils/createJwtToken";
+import { createAccessToken, createPasswordResetToken } from "utils/createJwtToken";
 import { readFileSync } from "fs";
 import { SendEmailDto, emailTemplatesFolder, sendEmail } from "utils/email";
 import logger from "utils/logger";
@@ -343,23 +343,29 @@ export const forgotPassword = async (
       );
       return next(customError);
     }
+    let link;
     if(user){
+      const token = createPasswordResetToken({email: user.email,id: user.id,role: user.role});
+      const employeeResetPasswordLink = `${process.env.ESOP_EMPLOYEE_URL}/resetPassword?token=${token}`;
       let html = readFileSync(
         `${emailTemplatesFolder}forgot-password.html`,
       ).toString();
       html = html.replace("#email#", user.email);
       html = html.replace("#name#", user.name);
+      html = html.replace("#ResetPasswordLink#",employeeResetPasswordLink);
       const sendEmailDto: SendEmailDto = {
         from: "sahilymenda@gmail.com",
         to: user.email,
         html,
-        subject: "Credentails Generated",
+        subject: "Reset Password",
       };
+      link = employeeResetPasswordLink;
       await sendEmail(sendEmailDto);
     }
     return res.customSuccess(
       200,
-      "Reset Passsword link has been shared through mail"
+      "Reset Passsword link has been shared through mail",
+      link
     );
   } catch (error) {
     const customError = new CustomError(500, "Raw", "Error", null, error);
