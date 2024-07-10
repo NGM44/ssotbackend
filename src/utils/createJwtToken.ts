@@ -56,7 +56,7 @@ export const checkJwt = async (
   try {
     const jwtPayload = jwt.verify(
       token,
-      process.env.JWT_SECRET as string,
+      process.env.JWT_USER_SECRET_KEY as string,
     ) as JwtUserPayload;
     req.jwtPayload = jwtPayload;
     const userDetails: IUser | null = await User.findOne({
