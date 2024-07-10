@@ -10,7 +10,7 @@ export const registerDevice = async (
   next: NextFunction,
 ) => {
   try {
-    const { identifier, modelType } = req.body;
+    const { name, identifier, modelType } = req.body;
     const existingDevice = await Device.findOne({identifier});
     if(existingDevice){
       const customError = new CustomError(409, "General", "Devuce already exists");
@@ -19,7 +19,8 @@ export const registerDevice = async (
     const device = await Device.create({
       modelType,
       identifier,
-      name: identifier,
+      name: name || identifier,
+      clientId: null,
       status: EStatus.REGISTERED,
     });
     logger.info("Device Registered successfully");

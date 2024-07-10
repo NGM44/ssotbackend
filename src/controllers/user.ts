@@ -106,19 +106,19 @@ export const generateCredentials = async (
     await User.findOneAndUpdate({id: existingUser.id}, {
       password: hashedPassword,
     });
-    let html = readFileSync(
-      `/Users/sahilmenda/Personal/ssotbackend/src/controllers/templates/emailTemplates/credentials-generated.html`,
-    ).toString();
-    html = html.replace("#email#", existingUser.email);
-    html = html.replace("#password#", password);
-    const sendEmailDto: SendEmailDto = {
-      from: "sahilymenda@gmail.com",
-      to: existingUser.email,
-      html,
-      subject: "Credentails Generated",
-    };
-    await sendEmail(sendEmailDto);
-    return res.customSuccess(200, "Generated Credentials successfully");
+    // let html = readFileSync(
+    //   `/Users/sahilmenda/Personal/ssotbackend/src/controllers/templates/emailTemplates/credentials-generated.html`,
+    // ).toString();
+    // html = html.replace("#email#", existingUser.email);
+    // html = html.replace("#password#", password);
+    // const sendEmailDto: SendEmailDto = {
+    //   from: "sahilymenda@gmail.com",
+    //   to: existingUser.email,
+    //   html,
+    //   subject: "Credentails Generated",
+    // };
+    // await sendEmail(sendEmailDto);
+    return res.customSuccess(200, "Generated Credentials successfully", password);
   } catch (err) {
     const customError = new CustomError(
       400,

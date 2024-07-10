@@ -34,6 +34,41 @@ export const checkJwt = async (
   res: Response,
   next: NextFunction,
 ) => {
+  const accessToken = req.get("AccessToken");
+  if (!accessToken) {
+    const customError = new CustomError(
+      400,
+      "General",
+      "AccessToken header not provided",
+    );
+    return next(customError);
+  }
+  const token = accessToken.split(" ")[1];
+  try {
+    const jwtPayload = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string,
+    ) as JwtUserPayload;
+    req.jwtPayload = jwtPayload;
+    const userDetails: IUser | null = await User.findOne({
+      id: jwtPayload.id,
+    });
+    if (!userDetails) {
+      const customError = new CustomError(
+        401,
+        "Raw",
+        "JWT error",
+        null,
+        "No User with the ID found",
+      );
+      return next(customError);
+    } else {
+      req.user = userDetails;
+    }
+  } catch (err) {
+    const customError = new CustomError(401, "Raw", "JWT error", null, err);
+    return next(customError);
+  }
   return next();
 };
 
