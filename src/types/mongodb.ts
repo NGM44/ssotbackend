@@ -50,8 +50,15 @@ export interface IClient extends Document {
 }
 
 export interface IClientDto extends Omit<IClient, keyof Document> {
-  users: IUser[],
-  devices: IDevice[]
+  users: IUserDto[],
+  devices: IDeviceDto[]
+}
+
+export interface IUserDto extends Omit<IUser, keyof Document>{
+
+}
+
+export interface IDeviceDto extends Omit<IDevice, keyof Document> {
 }
 
 export interface IDevice extends Document {

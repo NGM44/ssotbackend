@@ -62,12 +62,20 @@ export const getClient = async (
       const customError = new CustomError(409, "General", "Client not found");
       return next(customError);
     }
+    console.log(client);
     const clientUsers: IUser[] = await User.find({ clientId });
     const clientDevices: IDevice[] = await Device.find({ clientId });
     const clientDetailsToBeSent: IClientDto = {
-      ...client,
-      devices: clientDevices,
-      users: clientUsers,
+      address: client.address,
+        createdAt: client.createdAt,
+        email: client.email,
+        logo: client.logo,
+        name: client.name,
+        phone: client.phone,
+        updatedAt: client.updatedAt,
+        website: client.website,
+      devices: clientDevices.map(device => ({clientId: device.clientId,createdAt: device.createdAt,identifier: device.identifier,modelType: device.modelType,name: device.name,status: device.status,updatedAt: device.updatedAt})),
+      users: clientUsers.map(user=> ({ clientId: user.clientId, createdAt: user.createdAt,deactivated: user.deactivated,email: user.email,name: user.email,password: user.password,role: user.role,updatedAt: user.updatedAt})),
     };
     return res.customSuccess(
       200,
@@ -96,9 +104,41 @@ export const getAllClient = async (
     const clientUsers: IUser[] = await User.find({clientId: {$in:clients.map(c => c.id)}});
     const clientDevices: IDevice[] = await Device.find({clientId: {$in:clients.map(c => c.id)}});
     const clientDetailsToBeSent: IClientDto[] = clients.map(client => {
-      const devices = clientDevices.filter(d => d.clientId === client.id);
-      const users = clientUsers.filter(u => u.clientId === client.id);
-      return {...client,devices, users};
+      const devices = clientDevices
+        .filter((d) => d.clientId === client.id)
+        .map((device) => ({
+          clientId: device.clientId,
+          createdAt: device.createdAt,
+          identifier: device.identifier,
+          modelType: device.modelType,
+          name: device.name,
+          status: device.status,
+          updatedAt: device.updatedAt,
+        }));
+      const users = clientUsers
+        .filter((u) => u.clientId === client.id)
+        .map((user) => ({
+          clientId: user.clientId,
+          createdAt: user.createdAt,
+          deactivated: user.deactivated,
+          email: user.email,
+          name: user.email,
+          password: user.password,
+          role: user.role,
+          updatedAt: user.updatedAt,
+        }));
+      return {
+        address: client.address,
+        createdAt: client.createdAt,
+        email: client.email,
+        logo: client.logo,
+        name: client.name,
+        phone: client.phone,
+        updatedAt: client.updatedAt,
+        website: client.website,
+        devices,
+        users,
+      };
   });
     return res.customSuccess(200, "All Client Fetched successfully", clientDetailsToBeSent);
   } catch (err) {
