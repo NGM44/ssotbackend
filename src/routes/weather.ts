@@ -17,7 +17,6 @@ const router = Router();
 router.post("/data", checkDeviceJwt, postData);
 router.post("/deviceJwt", createDeviceToken);
 router.post("/createDataFromPostman", checkJwt, createDataFromPostman);
-router.put("/updateStatus", updateStatus);
 router.get("/data", checkJwt, getData);
 router.post("/report", checkJwt, generateReport);
 

@@ -72,6 +72,37 @@ export const connectDeviceWithUser = async (
     return next(customError);
   }
 };
+export const connectDeviceWithClient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const deviceId = req.body.deviceId;
+    const name = req.body.name;
+    const modelType = req.body.modelType;
+    const clientId = req.body.clientId;
+    if(!deviceId){
+      const customError = new CustomError(409, "General", "Device not found");
+      return next(customError);
+    }
+    if(!clientId){
+      const customError = new CustomError(409, "General", "Client not found");
+      return next(customError);
+    }
+    await Device.updateOne({ id: deviceId }, { status: EStatus.CONNECTED, name, modelType, clientId });
+    return res.customSuccess(200, "Device connected successfully");
+  } catch (err) {
+    const customError = new CustomError(
+      400,
+      "Raw",
+      "Cannot connect device",
+      null,
+      err,
+    );
+    return next(customError);
+  }
+};
 
 export const updateStatus = async (
   req: Request,

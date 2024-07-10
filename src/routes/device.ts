@@ -1,4 +1,5 @@
 import {
+  connectDeviceWithClient,
   connectDeviceWithUser,
   getAllDevices,
   registerDevice as register,
@@ -11,6 +12,7 @@ const router = Router();
 
 router.post("/register", register);
 router.post("/connectDeviceWithUser", checkJwt, connectDeviceWithUser);
+router.post("/connectDeviceWithClient", checkJwt, connectDeviceWithClient);
 router.put("/updateStatus", updateStatus);
 router.get("/all", checkJwt, getAllDevices);
 
