@@ -1,6 +1,10 @@
-export type JwtPayload = {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-  };
+export type JwtUserPayload = {
+  id: string;
+  email: string;
+  role: string;
+};
+
+export type JwtDevicePayload = {
+  id: string;
+  status: string;
+};
