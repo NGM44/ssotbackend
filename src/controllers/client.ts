@@ -1,6 +1,7 @@
 import { Client, Device, User } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { IClient, IClientDto, IDevice, IUser } from "types/mongodb";
+import { ulid } from "ulid";
 import logger from "utils/logger";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
@@ -21,6 +22,7 @@ export const createClient = async (
       return next(customError);
     }
     await Client.create({
+      id: ulid(),
       name: clientData.name,
       logo: clientData.logo,
       address: clientData.address,

@@ -8,6 +8,7 @@ import { readFileSync } from "fs";
 import { SendEmailDto, emailTemplatesFolder, sendEmail } from "utils/email";
 import logger from "utils/logger";
 import { CustomError } from "../utils/response/custom-error/CustomError";
+import { ulid } from "ulid";
 
 export const signUp = async (
   req: Request,
@@ -30,6 +31,7 @@ export const signUp = async (
   try {
     const hashedPassword = bcrypt.hashSync(password, 8);
     const data = {
+      id: ulid(),
       name,
       email,
       clientId,
@@ -68,6 +70,7 @@ export const adminSignUp = async (
   try {
     const hashedPassword = bcrypt.hashSync(password, 8);
     const data = {
+      id: ulid(),
       name,
       email,
       password: hashedPassword,
@@ -311,6 +314,49 @@ export const changePassword = async (
   }
 };
 
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { newPassword } = req.body;
+  const userId = req.user?.id || "";
+  logger.info(`User with user id ${userId} is trying to reset password`);
+  try {
+    const user: IUser | null = await User.findOne({id:userId});
+    if (!user) {
+      const customError = new CustomError(404, "General", "Not Found", [
+        "User not found!",
+      ]);
+      return next(customError);
+    }
+    const changedPassword = bcrypt.hashSync(newPassword, 8);
+    try {
+      await User.updateOne({ id: user.id }, { password: changedPassword });
+      //TODO: mail bhejna hai 
+      return res.customSuccess(200, "password successfully changed",changedPassword);
+    } catch (error) {
+      const customError = new CustomError(
+        500,
+        "Raw",
+        "Password could not be updated",
+        null,
+        error,
+      );
+      return next(customError);
+    }
+  } catch (error) {
+    const customError = new CustomError(
+      500,
+      "Raw",
+      "Password could not be updated",
+      null,
+      error,
+    );
+    return next(customError);
+  }
+};
+
 const checkIfPasswordMatch = (unencryptedPassword: string, password: string) =>
   bcrypt.compareSync(unencryptedPassword, password);
 
@@ -326,7 +372,7 @@ export const forgotPassword = async (
   const { email } = req.body;
   try {
     const user: IUser | null = await User.findOne({
-      where: { email },
+     email
     });
     if (!user) {
       const customError = new CustomError(404, "General", "User not Found", [
@@ -346,9 +392,9 @@ export const forgotPassword = async (
     let link;
     if(user){
       const token = createPasswordResetToken({email: user.email,id: user.id,role: user.role});
-      const employeeResetPasswordLink = `${process.env.ESOP_EMPLOYEE_URL}/resetPassword?token=${token}`;
+      const employeeResetPasswordLink = `${process.env.APP_URL}/changePassword?token=${token}`;
       let html = readFileSync(
-        `${emailTemplatesFolder}forgot-password.html`,
+        `/Users/sahilmenda/Personal/ssotbackend/src/controllers/templates/emailTemplates/forgot-password.html`,
       ).toString();
       html = html.replace("#email#", user.email);
       html = html.replace("#name#", user.name);

@@ -1,6 +1,7 @@
 import { Device, WeatherData } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { IWeatherData } from "types/mongodb";
+import { ulid } from "ulid";
 import { reportGenerator } from "utils/report";
 import { CustomError } from "utils/response/custom-error/CustomError";
 import { wss } from "websocket";
@@ -20,6 +21,7 @@ export const postData = async (
         client.send(JSON.stringify(dataToSend));
       });
       const data = {
+        id: ulid(),
         timestamp: new Date(),
         temperature: req.body.temperature,
         humidity: req.body.humidity,
@@ -60,7 +62,7 @@ export const createDataFromPostman = async (
     const oldDate = new Date("2024-04-01");
     const endDate = new Date(oldDate);
     endDate.setDate(endDate.getDate() + 90);
-    const device = await Device.create({ model: "Model 123", type: "Mobile" });
+    const device = await Device.create({id: ulid(), model: "Model 123", type: "Mobile" });
     const data = [];
     const currentDate = new Date(oldDate);
     while (currentDate < endDate) {

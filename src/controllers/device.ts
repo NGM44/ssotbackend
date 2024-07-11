@@ -1,6 +1,7 @@
 import { Device, UserDeviceMapping } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { EStatus } from "types/mongodb";
+import { ulid } from "ulid";
 import logger from "utils/logger";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
@@ -17,6 +18,7 @@ export const registerDevice = async (
       return next(customError);
     }
     const device = await Device.create({
+      id: ulid(),
       modelType,
       identifier,
       name: name || identifier,
@@ -58,7 +60,7 @@ export const connectDeviceWithUser = async (
       const customError = new CustomError(409, "General", "Client not found");
       return next(customError);
     }
-    await UserDeviceMapping.create({ deviceId, userId });
+    await UserDeviceMapping.create({ id: ulid(), deviceId, userId });
     await Device.updateOne({ deviceId }, { status: EStatus.CONNECTED });
     return res.customSuccess(200, "Device connected successfully");
   } catch (err) {
