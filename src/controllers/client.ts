@@ -12,7 +12,7 @@ export const createClient = async (
 ) => {
   try {
     const clientData = req.body;
-    const existingClient = await Client.findOne({ name: clientData.name });
+    const existingClient = await Client.findOne({ name: clientData.name }).lean();
     if (existingClient) {
       const customError = new CustomError(
         409,
@@ -59,14 +59,14 @@ export const getClient = async (
       );
       return next(customError);
     }
-    const client: IClient | null = await Client.findOne({ id: clientId });
+    const client: IClient | null = await Client.findOne({ id: clientId }).lean();
     if (!client) {
       const customError = new CustomError(409, "General", "Client not found");
       return next(customError);
     }
     console.log(client);
-    const clientUsers: IUser[] = await User.find({ clientId });
-    const clientDevices: IDevice[] = await Device.find({ clientId });
+    const clientUsers: IUser[] = await User.find({ clientId }).lean();
+    const clientDevices: IDevice[] = await Device.find({ clientId }).lean();
     const clientDetailsToBeSent: IClientDto = {
       id: client.id,
       address: client.address,
@@ -103,9 +103,9 @@ export const getAllClient = async (
   next: NextFunction,
 ) => {
   try {
-    const clients: IClient[] = await Client.find();
-    const clientUsers: IUser[] = await User.find({clientId: {$in:clients.map(c => c.id)}});
-    const clientDevices: IDevice[] = await Device.find({clientId: {$in:clients.map(c => c.id)}});
+    const clients: IClient[] = await Client.find().lean();
+    const clientUsers: IUser[] = await User.find({clientId: {$in:clients.map(c => c.id)}}).lean();
+    const clientDevices: IDevice[] = await Device.find({clientId: {$in:clients.map(c => c.id)}}).lean();
     const clientDetailsToBeSent: IClientDto[] = clients.map(client => {
       const devices = clientDevices
         .filter((d) => d.clientId === client.id)

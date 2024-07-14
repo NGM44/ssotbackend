@@ -165,7 +165,7 @@ export const getAllUsers = async (
   next: NextFunction,
 ) => {
   try {
-    const users: IUser[] = await User.find({id: 1, name: 1, _id: 0, email: 1, deactivated: 1, role: 1, clientId: 1 , password: 0});
+    const users: IUser[] = await User.find({id: 1, name: 1, _id: 0, email: 1, deactivated: 1, role: 1, clientId: 1 , password: 0}).lean();
     return res.customSuccess(200, "Users Fetched Successfully.", users);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);

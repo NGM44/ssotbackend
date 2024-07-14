@@ -1,6 +1,6 @@
 import { Device, WeatherData } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { IWeatherData } from "types/mongodb";
+import { EStatus } from "types/mongodb";
 import { ulid } from "ulid";
 import { reportGenerator } from "utils/report";
 import { CustomError } from "utils/response/custom-error/CustomError";
@@ -42,11 +42,22 @@ export const getData = async (
   next: NextFunction,
 ) => {
   try {
-    const data: IWeatherData[] = await WeatherData.find(
-      { timestamp: { $lt: new Date(), $gt: new Date("2024-06-01") } },
-      { timestamp: 1, humidity: 1, temperature: 1, _id: 0, id: 0 },
-    );
-    return res.customSuccess(200, "Fetched Successfully", data);
+    const deviceId = req.params.id;
+    const endDate = new Date(req.params.to);
+    const startDate = new Date(req.params.from)
+    const allData = await WeatherData.find(
+          { timestamp: { $gte: startDate, $lte: endDate }, deviceId },
+          {timestamp:1, temperature: 1, humidity:1 , _id: 0}
+        ).lean();
+    const dataToSend = allData.map((d) => ({
+      temperature: parseFloat(d.temperature.toFixed(2)),
+      humidity: parseFloat(d.humidity.toFixed(2)),
+      dateString:
+        d.timestamp.toDateString() +
+        " " +
+        d.timestamp.toTimeString().split(" ")[0],
+    })); 
+    return res.customSuccess(200, "Fetched Successfully", dataToSend);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
@@ -59,10 +70,11 @@ export const createDataFromPostman = async (
   next: NextFunction,
 ) => {
   try {
-    const oldDate = new Date("2024-04-01");
-    const endDate = new Date(oldDate);
-    endDate.setDate(endDate.getDate() + 90);
-    const device = await Device.create({id: ulid(), model: "Model 123", type: "Mobile" });
+    const oldDate = new Date();
+    const endDate = new Date();
+    oldDate.setDate(oldDate.getDate() - 90);
+    const deviceId = ulid();
+    await Device.create({id:deviceId , name: "Model 123", modelType: "Mobile", identifier: ulid(),clientId: null, status: EStatus.CONNECTED });
     const data = [];
     const currentDate = new Date(oldDate);
     while (currentDate < endDate) {
@@ -70,7 +82,7 @@ export const createDataFromPostman = async (
         timestamp: new Date(currentDate),
         temperature: Math.random() * 15 + 10,
         humidity: Math.random() * 30 + 40,
-        deviceId: device.id,
+        deviceId,
       });
       currentDate.setSeconds(currentDate.getSeconds() + 10);
     }

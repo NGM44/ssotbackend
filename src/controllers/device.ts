@@ -12,7 +12,7 @@ export const registerDevice = async (
 ) => {
   try {
     const { name, identifier, modelType } = req.body;
-    const existingDevice = await Device.findOne({identifier});
+    const existingDevice = await Device.findOne({identifier}).lean();
     if(existingDevice){
       const customError = new CustomError(409, "General", "Devuce already exists");
       return next(customError);
@@ -115,7 +115,7 @@ export const updateStatus = async (
     const stateToBeUpdated = req.body.state as EStatus;
     const deviceId = req.body.deviceId;
     // validate if stateToBeUpdated is valid for current device state.
-    await Device.findOneAndUpdate({ id: deviceId }, { status: stateToBeUpdated });
+    await Device.findOneAndUpdate({ id: deviceId }, { status: stateToBeUpdated }).lean();
     if (stateToBeUpdated === EStatus.UNREGISTERED) {
       await UserDeviceMapping.deleteMany({ deviceId });
     }
@@ -138,7 +138,7 @@ export const getAllDevices = async (
   next: NextFunction,
 ) => {
   try {
-    const devices = await Device.find();
+    const devices = await Device.find().lean();
     const devicesToBeSent = devices.map((device) => ({
       id: device.id,
       clientId: device.clientId,
