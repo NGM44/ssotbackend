@@ -12,9 +12,13 @@ export const registerDevice = async (
 ) => {
   try {
     const { name, identifier, modelType } = req.body;
-    const existingDevice = await Device.findOne({identifier}).lean();
-    if(existingDevice){
-      const customError = new CustomError(409, "General", "Devuce already exists");
+    const existingDevice = await Device.findOne({ identifier }).lean();
+    if (existingDevice) {
+      const customError = new CustomError(
+        409,
+        "General",
+        "Devuce already exists",
+      );
       return next(customError);
     }
     const device = await Device.create({
@@ -48,15 +52,15 @@ export const connectDeviceWithUser = async (
     const userId = req.user?.id;
     const deviceId = req.body.deviceId;
     const clientId = req.body.clientId;
-    if(!userId){
+    if (!userId) {
       const customError = new CustomError(409, "General", "User not found");
       return next(customError);
     }
-    if(!deviceId){
+    if (!deviceId) {
       const customError = new CustomError(409, "General", "Device not found");
       return next(customError);
     }
-    if(!clientId){
+    if (!clientId) {
       const customError = new CustomError(409, "General", "Client not found");
       return next(customError);
     }
@@ -84,15 +88,18 @@ export const connectDeviceWithClient = async (
     const name = req.body.name;
     const modelType = req.body.modelType;
     const clientId = req.body.clientId;
-    if(!deviceId){
+    if (!deviceId) {
       const customError = new CustomError(409, "General", "Device not found");
       return next(customError);
     }
-    if(!clientId){
+    if (!clientId) {
       const customError = new CustomError(409, "General", "Client not found");
       return next(customError);
     }
-    await Device.updateOne({ id: deviceId }, { status: EStatus.CONNECTED, name, modelType, clientId });
+    await Device.updateOne(
+      { id: deviceId },
+      { status: EStatus.CONNECTED, name, modelType, clientId },
+    );
     return res.customSuccess(200, "Device connected successfully");
   } catch (err) {
     const customError = new CustomError(
@@ -115,7 +122,10 @@ export const updateStatus = async (
     const stateToBeUpdated = req.body.state as EStatus;
     const deviceId = req.body.deviceId;
     // validate if stateToBeUpdated is valid for current device state.
-    await Device.findOneAndUpdate({ id: deviceId }, { status: stateToBeUpdated }).lean();
+    await Device.findOneAndUpdate(
+      { id: deviceId },
+      { status: stateToBeUpdated },
+    ).lean();
     if (stateToBeUpdated === EStatus.UNREGISTERED) {
       await UserDeviceMapping.deleteMany({ deviceId });
     }
@@ -149,7 +159,11 @@ export const getAllDevices = async (
       status: device.status,
       updatedAt: device.updatedAt,
     }));
-    return res.customSuccess(200, "Devices Fetched Successfully.", devicesToBeSent);
+    return res.customSuccess(
+      200,
+      "Devices Fetched Successfully.",
+      devicesToBeSent,
+    );
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);

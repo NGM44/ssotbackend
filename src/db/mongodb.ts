@@ -1,5 +1,12 @@
 import mongoose from "mongoose";
-import { IClient, IDevice, IUser, IWeatherData, ERole, EStatus } from "types/mongodb";
+import {
+  IClient,
+  IDevice,
+  IUser,
+  IWeatherData,
+  ERole,
+  EStatus,
+} from "types/mongodb";
 import { ulid } from "ulid";
 
 const { Schema } = mongoose;
@@ -23,7 +30,7 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     deactivated: { type: Boolean, default: false },
     role: { type: String, enum: roles, required: true },
-    clientId: { type: String, ref: "Client"},
+    clientId: { type: String, ref: "Client" },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
@@ -46,7 +53,7 @@ const clientSchema = new Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+  },
 );
 
 const deviceSchema = new Schema(
@@ -55,7 +62,7 @@ const deviceSchema = new Schema(
     name: { type: String, required: true },
     identifier: { type: String, required: true },
     status: { type: String, enum: statuses, required: true },
-    clientId: { type: String, ref: "Client"},
+    clientId: { type: String, ref: "Client" },
     modelType: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },

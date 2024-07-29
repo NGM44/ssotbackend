@@ -3,12 +3,15 @@ import { User, UserDeviceMapping } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { JwtUserPayload } from "types/jwtPayload";
 import { IUser, ERole } from "types/mongodb";
-import { createAccessToken, createPasswordResetToken } from "utils/createJwtToken";
-import { readFileSync } from "fs";
+import {
+  createAccessToken,
+  createPasswordResetToken,
+} from "utils/createJwtToken";
+import fs, { readFileSync } from "fs";
 import { SendEmailDto, emailTemplatesFolder, sendEmail } from "utils/email";
 import logger from "utils/logger";
-import { CustomError } from "../utils/response/custom-error/CustomError";
 import { ulid } from "ulid";
+import { CustomError } from "../utils/response/custom-error/CustomError";
 
 export const signUp = async (
   req: Request,
@@ -17,14 +20,18 @@ export const signUp = async (
 ) => {
   const { email, name, clientId } = req.body;
   const existingUser = await User.findOne({
-    email
+    email,
   });
   if (existingUser) {
     const customError = new CustomError(409, "General", "User already exists");
     return next(customError);
   }
-  if(!clientId){
-    const customError = new CustomError(409, "General", "Cannot create user without client ID");
+  if (!clientId) {
+    const customError = new CustomError(
+      409,
+      "General",
+      "Cannot create user without client ID",
+    );
     return next(customError);
   }
   const password = generateRandomPassword();
@@ -59,7 +66,7 @@ export const adminSignUp = async (
 ) => {
   const { email, name } = req.body;
   const existingUser = await User.findOne({
-    email
+    email,
   });
   if (existingUser) {
     const customError = new CustomError(409, "General", "User already exists");
@@ -106,22 +113,30 @@ export const generateCredentials = async (
   const password = generateRandomPassword();
   try {
     const hashedPassword = bcrypt.hashSync(password, 8);
-    await User.findOneAndUpdate({id: existingUser.id}, {
-      password: hashedPassword,
-    });
-    // let html = readFileSync(
-    //   `/Users/sahilmenda/Personal/ssotbackend/src/controllers/templates/emailTemplates/credentials-generated.html`,
-    // ).toString();
-    // html = html.replace("#email#", existingUser.email);
-    // html = html.replace("#password#", password);
-    // const sendEmailDto: SendEmailDto = {
-    //   from: "sahilymenda@gmail.com",
-    //   to: existingUser.email,
-    //   html,
-    //   subject: "Credentails Generated",
-    // };
-    // await sendEmail(sendEmailDto);
-    return res.customSuccess(200, "Generated Credentials successfully", password);
+    await User.findOneAndUpdate(
+      { id: existingUser.id },
+      {
+        password: hashedPassword,
+      },
+    );
+    let html = readFileSync(
+      `${emailTemplatesFolder}/credentials-generated.html`,
+    ).toString();
+    html = html.replace("#email#", existingUser.email);
+    html = html.replace("#name#", existingUser.name);
+    html = html.replace("#password#", password);
+    const sendEmailDto: SendEmailDto = {
+      from: process.env.SENDGRID_FROM!,
+      to: existingUser.email,
+      html,
+      subject: "Credentails Generated",
+    };
+    await sendEmail(sendEmailDto);
+    return res.customSuccess(
+      200,
+      "Generated Credentials successfully",
+      password,
+    );
   } catch (err) {
     const customError = new CustomError(
       400,
@@ -151,7 +166,7 @@ export const deleteUser = async (
       return next(customError);
     }
     await User.deleteOne({ id: user.id });
-    await UserDeviceMapping.deleteMany({userId: user.id});
+    await UserDeviceMapping.deleteMany({ userId: user.id });
     return res.customSuccess(200, "User Deleted Successfully.");
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
@@ -165,7 +180,16 @@ export const getAllUsers = async (
   next: NextFunction,
 ) => {
   try {
-    const users: IUser[] = await User.find({id: 1, name: 1, _id: 0, email: 1, deactivated: 1, role: 1, clientId: 1 , password: 0}).lean();
+    const users: IUser[] = await User.find({
+      id: 1,
+      name: 1,
+      _id: 0,
+      email: 1,
+      deactivated: 1,
+      role: 1,
+      clientId: 1,
+      password: 0,
+    }).lean();
     return res.customSuccess(200, "Users Fetched Successfully.", users);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
@@ -192,7 +216,7 @@ export const deactiveUser = async (
     }
 
     const updatedUser: IUser | null = await User.findOneAndUpdate(
-      {id:user.id},
+      { id: user.id },
       { deactivated },
       { new: true },
     );
@@ -222,7 +246,10 @@ export const login = async (
 ) => {
   const { email, password } = req.body;
   try {
-    const user: IUser | null = await User.findOne({ email, deactivated: false });
+    const user: IUser | null = await User.findOne({
+      email,
+      deactivated: false,
+    });
     if (!user) {
       const customError = new CustomError(404, "General", "user not found");
       return next(customError);
@@ -323,7 +350,7 @@ export const resetPassword = async (
   const userId = req.user?.id || "";
   logger.info(`User with user id ${userId} is trying to reset password`);
   try {
-    const user: IUser | null = await User.findOne({id:userId});
+    const user: IUser | null = await User.findOne({ id: userId });
     if (!user) {
       const customError = new CustomError(404, "General", "Not Found", [
         "User not found!",
@@ -333,8 +360,12 @@ export const resetPassword = async (
     const changedPassword = bcrypt.hashSync(newPassword, 8);
     try {
       await User.updateOne({ id: user.id }, { password: changedPassword });
-      //TODO: mail bhejna hai 
-      return res.customSuccess(200, "password successfully changed",changedPassword);
+      //TODO: mail bhejna hai
+      return res.customSuccess(
+        200,
+        "password successfully changed",
+        changedPassword,
+      );
     } catch (error) {
       const customError = new CustomError(
         500,
@@ -367,12 +398,12 @@ function generateRandomPassword() {
 export const forgotPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { email } = req.body;
   try {
     const user: IUser | null = await User.findOne({
-     email
+      email,
     });
     if (!user) {
       const customError = new CustomError(404, "General", "User not Found", [
@@ -385,33 +416,37 @@ export const forgotPassword = async (
         404,
         "General",
         "Account has been Deactivated",
-        ["Account has been Deactivated"]
+        ["Account has been Deactivated"],
       );
       return next(customError);
     }
     let link;
-    if(user){
-      const token = createPasswordResetToken({email: user.email,id: user.id,role: user.role});
+    if (user) {
+      const token = createPasswordResetToken({
+        email: user.email,
+        id: user.id,
+        role: user.role,
+      });
       const employeeResetPasswordLink = `${process.env.APP_URL}/changePassword?token=${token}`;
-      let html = readFileSync(
-        `/Users/sahilmenda/Personal/ssotbackend/src/controllers/templates/emailTemplates/forgot-password.html`,
-      ).toString();
+      let html = fs
+        .readFileSync(`${emailTemplatesFolder}/forgot-password.html`)
+        .toString();
       html = html.replace("#email#", user.email);
       html = html.replace("#name#", user.name);
-      html = html.replace("#ResetPasswordLink#",employeeResetPasswordLink);
+      html = html.replace("#ResetPasswordLink#", employeeResetPasswordLink);
       const sendEmailDto: SendEmailDto = {
-        from: "sahilymenda@gmail.com",
+        from: process.env.SENDGRID_FROM!,
         to: user.email,
         html,
         subject: "Reset Password",
       };
       link = employeeResetPasswordLink;
-      await sendEmail(sendEmailDto);
+      // await sendEmail(sendEmailDto);
     }
     return res.customSuccess(
       200,
       "Reset Passsword link has been shared through mail",
-      link
+      link,
     );
   } catch (error) {
     const customError = new CustomError(500, "Raw", "Error", null, error);

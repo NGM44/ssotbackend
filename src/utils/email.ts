@@ -1,9 +1,7 @@
 import sendGridMail from "@sendgrid/mail";
 import logger from "./logger";
 
-sendGridMail.setApiKey(process.env.SENDGRID_API_KEY || "SG.FAKE");
-
-export const emailTemplatesFolder = `${process.cwd()}/src/controllers/template/emailTemplates/`;
+export const emailTemplatesFolder = `${process.cwd()}/src/controllers/templates/emailTemplates`;
 
 export type SendEmailDto = {
   from: string;
@@ -13,6 +11,8 @@ export type SendEmailDto = {
 };
 
 export const sendEmail = async (sendEmailDto: SendEmailDto) => {
+  const apiKey = process.env.SENDGRID_API_KEY!;
+  sendGridMail.setApiKey(apiKey);
   const { from, to, subject, html } = sendEmailDto;
   logger.info(`Sending Email from ${from} to ${to} `);
   try {
