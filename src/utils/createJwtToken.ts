@@ -16,14 +16,11 @@ export const createDeviceAccessToken = (payload: JwtDevicePayload): string =>
     algorithm: "HS512",
   });
 
-  export const createPasswordResetToken = (
-    payload: JwtUserPayload
-  ): string => {
-    return jwt.sign(payload, process.env.JWT_USER_SECRET_KEY as string, {
-      expiresIn: 600,
-      algorithm: "HS512",
-    });
-  };
+export const createPasswordResetToken = (payload: JwtUserPayload): string =>
+  jwt.sign(payload, process.env.JWT_USER_SECRET_KEY as string, {
+    expiresIn: 600,
+    algorithm: "HS512",
+  });
 
 // internal method to generate a device token
 export const createDeviceToken = async (

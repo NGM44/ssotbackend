@@ -22,7 +22,7 @@ router.delete("/:id", checkJwt, deleteUser);
 router.get("/all", checkJwt, getAllUsers);
 router.get("/deactive", checkJwt, deactiveUser);
 router.post("/login", login);
-router.post("/changePassword", checkJwt,changePassword);
+router.post("/changePassword", checkJwt, changePassword);
 router.post("/resetPassword", checkJwt, resetPassword);
 router.post("/forgotPassword", forgotPassword);
 

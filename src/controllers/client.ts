@@ -8,16 +8,18 @@ import { CustomError } from "utils/response/custom-error/CustomError";
 export const createClient = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const clientData = req.body;
-    const existingClient = await Client.findOne({ name: clientData.name }).lean();
+    const existingClient = await Client.findOne({
+      name: clientData.name,
+    }).lean();
     if (existingClient) {
       const customError = new CustomError(
         409,
         "General",
-        "Client already exists"
+        "Client already exists",
       );
       return next(customError);
     }
@@ -38,7 +40,7 @@ export const createClient = async (
       "Raw",
       "Cannot create client",
       null,
-      err
+      err,
     );
     return next(customError);
   }
@@ -47,7 +49,7 @@ export const createClient = async (
 export const getClient = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const clientId = req.params.id;
@@ -55,35 +57,55 @@ export const getClient = async (
       const customError = new CustomError(
         409,
         "General",
-        "Client ID not found"
+        "Client ID not found",
       );
       return next(customError);
     }
-    const client: IClient | null = await Client.findOne({ id: clientId }).lean();
+    const client: IClient | null = await Client.findOne({
+      id: clientId,
+    }).lean();
     if (!client) {
       const customError = new CustomError(409, "General", "Client not found");
       return next(customError);
     }
-    console.log(client);
     const clientUsers: IUser[] = await User.find({ clientId }).lean();
     const clientDevices: IDevice[] = await Device.find({ clientId }).lean();
     const clientDetailsToBeSent: IClientDto = {
       id: client.id,
       address: client.address,
-        createdAt: client.createdAt,
-        email: client.email,
-        logo: client.logo,
-        name: client.name,
-        phone: client.phone,
-        updatedAt: client.updatedAt,
-        website: client.website,
-      devices: clientDevices.map(device => ({id: device.id,clientId: device.clientId,createdAt: device.createdAt,identifier: device.identifier,modelType: device.modelType,name: device.name,status: device.status,updatedAt: device.updatedAt})),
-      users: clientUsers.map(user=> ({ id: user.id,clientId: user.clientId, createdAt: user.createdAt,deactivated: user.deactivated,email: user.email,name: user.email,password: user.password,role: user.role,updatedAt: user.updatedAt})),
+      createdAt: client.createdAt,
+      email: client.email,
+      logo: client.logo,
+      name: client.name,
+      phone: client.phone,
+      updatedAt: client.updatedAt,
+      website: client.website,
+      devices: clientDevices.map((device) => ({
+        id: device.id,
+        clientId: device.clientId,
+        createdAt: device.createdAt,
+        identifier: device.identifier,
+        modelType: device.modelType,
+        name: device.name,
+        status: device.status,
+        updatedAt: device.updatedAt,
+      })),
+      users: clientUsers.map((user) => ({
+        id: user.id,
+        clientId: user.clientId,
+        createdAt: user.createdAt,
+        deactivated: user.deactivated,
+        email: user.email,
+        name: user.email,
+        password: user.password,
+        role: user.role,
+        updatedAt: user.updatedAt,
+      })),
     };
     return res.customSuccess(
       200,
       "Client Fetched successfully",
-      clientDetailsToBeSent
+      clientDetailsToBeSent,
     );
   } catch (err) {
     const customError = new CustomError(
@@ -104,9 +126,13 @@ export const getAllClient = async (
 ) => {
   try {
     const clients: IClient[] = await Client.find().lean();
-    const clientUsers: IUser[] = await User.find({clientId: {$in:clients.map(c => c.id)}}).lean();
-    const clientDevices: IDevice[] = await Device.find({clientId: {$in:clients.map(c => c.id)}}).lean();
-    const clientDetailsToBeSent: IClientDto[] = clients.map(client => {
+    const clientUsers: IUser[] = await User.find({
+      clientId: { $in: clients.map((c) => c.id) },
+    }).lean();
+    const clientDevices: IDevice[] = await Device.find({
+      clientId: { $in: clients.map((c) => c.id) },
+    }).lean();
+    const clientDetailsToBeSent: IClientDto[] = clients.map((client) => {
       const devices = clientDevices
         .filter((d) => d.clientId === client.id)
         .map((device) => ({
@@ -145,15 +171,19 @@ export const getAllClient = async (
         devices,
         users,
       };
-  });
-    return res.customSuccess(200, "All Client Fetched successfully", clientDetailsToBeSent);
+    });
+    return res.customSuccess(
+      200,
+      "All Client Fetched successfully",
+      clientDetailsToBeSent,
+    );
   } catch (err) {
     const customError = new CustomError(
       400,
       "Raw",
       "Cannot fetch all client",
       null,
-      err
+      err,
     );
     return next(customError);
   }

@@ -51,11 +51,11 @@ export interface IClient extends Document {
 
 export interface IClientDto extends Omit<IClient, keyof Document> {
   id: string;
-  users: IUserDto[],
-  devices: IDeviceDto[]
+  users: IUserDto[];
+  devices: IDeviceDto[];
 }
 
-export interface IUserDto extends Omit<IUser, keyof Document>{
+export interface IUserDto extends Omit<IUser, keyof Document> {
   id: string;
 }
 
