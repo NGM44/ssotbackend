@@ -157,12 +157,12 @@ export const deleteUser = async (
   const id = req.params.id;
   try {
     if (!id) {
-      const customError = new CustomError(404, "General", "user not found");
+      const customError = new CustomError(500, "General", "user not found");
       return next(customError);
     }
     const user = await User.findOne({ id });
     if (!user) {
-      const customError = new CustomError(404, "General", "user not found");
+      const customError = new CustomError(500, "General", "user not found");
       return next(customError);
     }
     await User.deleteOne({ id: user.id });
@@ -206,12 +206,12 @@ export const deactiveUser = async (
   const deactivated = req.query.deactivated !== "false";
   try {
     if (!email) {
-      const customError = new CustomError(404, "General", "user not found");
+      const customError = new CustomError(500, "General", "user not found");
       return next(customError);
     }
     const user = await User.findOne({ email });
     if (!user) {
-      const customError = new CustomError(404, "General", "user not found");
+      const customError = new CustomError(500, "General", "user not found");
       return next(customError);
     }
 
@@ -251,11 +251,11 @@ export const login = async (
       deactivated: false,
     });
     if (!user) {
-      const customError = new CustomError(404, "General", "user not found");
+      const customError = new CustomError(500, "General", "user not found");
       return next(customError);
     }
     if (!checkIfPasswordMatch(password, user.password)) {
-      const customError = new CustomError(404, "General", "invalid password");
+      const customError = new CustomError(500, "General", "invalid password");
       return next(customError);
     }
     const jwtPayload: JwtUserPayload = {
@@ -294,7 +294,7 @@ export const changePassword = async (
   try {
     const user: IUser | null = await User.findById(userId);
     if (!user) {
-      const customError = new CustomError(404, "General", "Not Found", [
+      const customError = new CustomError(500, "General", "Not Found", [
         "User not found!",
       ]);
       return next(customError);
@@ -352,7 +352,7 @@ export const resetPassword = async (
   try {
     const user: IUser | null = await User.findOne({ id: userId });
     if (!user) {
-      const customError = new CustomError(404, "General", "Not Found", [
+      const customError = new CustomError(500, "General", "Not Found", [
         "User not found!",
       ]);
       return next(customError);
@@ -406,14 +406,14 @@ export const forgotPassword = async (
       email,
     });
     if (!user) {
-      const customError = new CustomError(404, "General", "User not Found", [
+      const customError = new CustomError(500, "General", "User not Found", [
         "User not found!",
       ]);
       return next(customError);
     }
     if (user?.deactivated) {
       const customError = new CustomError(
-        404,
+        500,
         "General",
         "Account has been Deactivated",
         ["Account has been Deactivated"],
@@ -441,7 +441,7 @@ export const forgotPassword = async (
         subject: "Reset Password",
       };
       link = employeeResetPasswordLink;
-      // await sendEmail(sendEmailDto);
+      await sendEmail(sendEmailDto);
     }
     return res.customSuccess(
       200,
