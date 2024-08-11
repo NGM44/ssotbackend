@@ -169,3 +169,37 @@ export const getAllDevices = async (
     return next(customError);
   }
 };
+
+export const getUserDevices = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const user = req.user;
+    if(!user){
+      const customError = new CustomError(409, "General", "User not found");
+      return next(customError);
+    }
+    const deviceIds = (await UserDeviceMapping.find({userId: user.id}).lean()).map(mapping => mapping.deviceId);
+    const devices = await Device.find({ id: { $in: deviceIds},}).lean();
+    const devicesToBeSent = devices.map((device) => ({
+      id: device.id,
+      clientId: device.clientId,
+      createdAt: device.createdAt,
+      identifier: device.identifier,
+      modelType: device.modelType,
+      name: device.name,
+      status: device.status,
+      updatedAt: device.updatedAt,
+    }));
+    return res.customSuccess(
+      200,
+      "Devices Fetched Successfully.",
+      devicesToBeSent,
+    );
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};
