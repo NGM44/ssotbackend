@@ -7,6 +7,7 @@ import routes from "routes/routes";
 import { errorHandler } from "utils/errorHandler";
 import "./utils/response/customSuccess";
 import logger from "utils/logger";
+import { consumeWeatherData } from "mqtt";
 /* eslint-disable no-console */
 
 dotenv.config();
@@ -40,6 +41,7 @@ mongoose
 app.listen(port, () => {
   app.use("/", routes);
   app.use(errorHandler);
+  consumeWeatherData();
   logger.info(`Listening on port: ${port}`);
   return console.log(`Listening on port: ${port}`);
 });
