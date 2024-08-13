@@ -4,37 +4,6 @@ import { EStatus } from "types/mongodb";
 import { ulid } from "ulid";
 import { reportGenerator } from "utils/report";
 import { CustomError } from "utils/response/custom-error/CustomError";
-import { wss } from "websocket";
-
-export const postData = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    if (req.body.temperature && req.body.humidity && req.device) {
-      const dataToSend = {
-        temperature: req.body.temperature,
-        humidity: req.body.humidity,
-      };
-      wss.clients.forEach((client) => {
-        client.send(JSON.stringify(dataToSend));
-      });
-      const data = {
-        id: ulid(),
-        timestamp: new Date(),
-        temperature: req.body.temperature,
-        humidity: req.body.humidity,
-        deviceId: req.device.id,
-      };
-      await WeatherData.create(data);
-    }
-    return res.customSuccess(200, "Created Successfully");
-  } catch (err) {
-    const customError = new CustomError(500, "Raw", "Error", null, err);
-    return next(customError);
-  }
-};
 
 export const getData = async (
   req: Request,
