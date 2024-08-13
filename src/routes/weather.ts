@@ -3,7 +3,6 @@ import {
   createDataFromPostman,
   generateReport,
   getData,
-  postData,
 } from "controllers/weather";
 import { Router } from "express";
 import {
@@ -14,7 +13,6 @@ import {
 
 const router = Router();
 
-router.post("/data", checkDeviceJwt, postData);
 router.post("/deviceJwt", createDeviceToken);
 router.post("/createDataFromPostman", checkJwt, createDataFromPostman);
 router.get("/data/:id/:from/:to", checkJwt, getData);
