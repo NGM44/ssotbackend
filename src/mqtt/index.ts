@@ -19,7 +19,9 @@ export const publishWeatherData = async (req: Request, res: Response) => {
       deviceId,
       temperature: req.body.temperature,
       humidity: req.body.humidity,
-      dateString: new Date().toISOString(),
+      dateString: `${new Date().toDateString()} ${
+        new Date().toTimeString().split(" ")[0]
+      }`,
   };
 
   channel.publish(exchange, routingKey, Buffer.from(JSON.stringify(weatherData)));
