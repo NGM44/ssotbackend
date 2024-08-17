@@ -49,7 +49,7 @@ export const createDataFromPostman = async (
         humidity: Math.random() * 30 + 40,
         deviceId,
       });
-      currentDate.setSeconds(currentDate.getSeconds() + 10);
+      currentDate.setSeconds(currentDate.getSeconds() + 60);
     }
     await WeatherData.insertMany(data);
     return res.customSuccess(200, "Created Successfully");
