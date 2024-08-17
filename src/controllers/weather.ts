@@ -1,8 +1,6 @@
-import { Device, WeatherData } from "db/mongodb";
+import { WeatherData } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { EStatus } from "types/mongodb";
-import { ulid } from "ulid";
-import { reportGenerator } from "utils/report";
+import { generateWeatherReport } from "utils/report";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
 export const getData = async (
@@ -41,15 +39,7 @@ export const createDataFromPostman = async (
     const oldDate = new Date();
     const endDate = new Date();
     oldDate.setDate(oldDate.getDate() - 90);
-    const deviceId = ulid();
-    await Device.create({
-      id: deviceId,
-      name: "Model 123",
-      modelType: "Mobile",
-      identifier: ulid(),
-      clientId: null,
-      status: EStatus.CONNECTED,
-    });
+    const deviceId = req.body.deviceId;
     const data = [];
     const currentDate = new Date(oldDate);
     while (currentDate < endDate) {
@@ -59,7 +49,7 @@ export const createDataFromPostman = async (
         humidity: Math.random() * 30 + 40,
         deviceId,
       });
-      currentDate.setSeconds(currentDate.getSeconds() + 10);
+      currentDate.setSeconds(currentDate.getSeconds() + 60);
     }
     await WeatherData.insertMany(data);
     return res.customSuccess(200, "Created Successfully");
@@ -75,8 +65,21 @@ export const generateReport = async (
   next: NextFunction,
 ) => {
   try {
-    const json = req.body;
-    const base64File = await reportGenerator(json);
+    const deviceId = req.body.deviceId;
+    const endDate = new Date(req.body.to);
+    const startDate = new Date(req.body.from);
+    const allData = await WeatherData.find(
+      { timestamp: { $gte: startDate, $lte: endDate }, deviceId },
+      { timestamp: 1, temperature: 1, humidity: 1, _id: 0 },
+    ).lean();
+    const dataToSend = allData.map((d) => ({
+      temperature: parseFloat(d.temperature.toFixed(2)),
+      humidity: parseFloat(d.humidity.toFixed(2)),
+      dateString: `${d.timestamp.toDateString()} ${
+        d.timestamp.toTimeString().split(" ")[0]
+      }`,
+    }));
+    const base64File = generateWeatherReport(dataToSend);
     return res.customSuccess(200, "success", base64File);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
