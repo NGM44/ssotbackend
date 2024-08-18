@@ -1,6 +1,6 @@
 
 import { Router } from "express";
-import { publishWeatherData } from "mqtt";
+import { publishWeatherData } from "mqttserver";
 import { checkDeviceJwt } from "utils/createJwtToken";
 
 
