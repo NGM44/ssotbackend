@@ -70,9 +70,8 @@ export const createDataFromPostman = async (
   next: NextFunction,
 ) => {
   try {
-    const oldDate = new Date();
-    const endDate = new Date();
-    oldDate.setDate(oldDate.getDate() - 90);
+    const endDate = new Date(req.body.to);
+    const oldDate = new Date(req.body.from);
     const deviceId = req.body.deviceId;
     const data = [];
     const currentDate = new Date(oldDate);
@@ -101,6 +100,7 @@ export const createDataFromPostman = async (
       });
       currentDate.setSeconds(currentDate.getSeconds() + 60);
     }
+    console.log("Creating data");
     await WeatherData.insertMany(data);
     return res.customSuccess(200, "Created Successfully");
   } catch (err) {
