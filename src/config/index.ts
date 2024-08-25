@@ -3,21 +3,17 @@ import WebSocket from 'ws';
 import https from 'https';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
-import logger from 'utils/logger';
 
 let wss: WebSocket.Server<typeof WebSocket, typeof IncomingMessage>;
 let client: mqtt.MqttClient;
 
 export async function configureMQTTServer(): Promise<void> {
-  try{
   const mqttUrl = process.env.MQTTURL!;
   client = mqtt.connect(mqttUrl);
 
   client.on('connect', () => {
     console.log('MQTT client connected');
   });
-
-  logger.info(client + "Client got connected");
 
   client.on('error', (err) => {
     console.error('MQTT Error:', err);
@@ -44,9 +40,6 @@ export async function configureMQTTServer(): Promise<void> {
       console.log("WebSocket server listening on port 8080");
       resolve();
     }
-  });}
-  catch(err){
-    logger.error(err);
-  }
+  });
 }
 export { wss, client };
