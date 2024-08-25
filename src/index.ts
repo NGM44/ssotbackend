@@ -41,8 +41,8 @@ mongoose
   .catch((err) => console.log(err));
 app.listen(port, () => {
   app.use("/", routes);
-  // configureMQTTServer();
-  // consumeWeatherData();
+  configureMQTTServer();
+  consumeWeatherData();
   app.use(errorHandler);
   logger.info(`Listening on port: ${port}`);
   return console.log(`Listening on port: ${port}`);

@@ -59,7 +59,7 @@ export const publishWeatherData = async (req: Request, res: Response, next: Next
 
 export const consumeWeatherData = async () => {
   client.on('connect', () => {
-    console.log('Connected to MQTT broker');
+    console.log('Connected to MQTT broker from consumer side');
     client.subscribe('weather_data/#', (err) => {
       if (err) {
         console.error('Failed to subscribe:', err);
@@ -106,6 +106,6 @@ export const consumeWeatherData = async () => {
     }
   });
   client.on('error', (err) => {
-    console.error('MQTT Error:', err);
+    console.error('MQTT Error from consumer side:', err);
   });
 };

@@ -12,11 +12,11 @@ export async function configureMQTTServer(): Promise<void> {
   client = mqtt.connect(mqttUrl);
 
   client.on('connect', () => {
-    console.log('MQTT client connected');
+    console.log('MQTT client connected from configuration side');
   });
 
   client.on('error', (err) => {
-    console.error('MQTT Error:', err);
+    console.error('MQTT Error from configuration side:', err);
   });
 
   return new Promise((resolve, reject) => {
