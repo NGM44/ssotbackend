@@ -1,6 +1,6 @@
-import { Device, UserDeviceMapping } from "db/mongodb";
+import { Client, Device, User, UserDeviceMapping } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { EStatus } from "types/mongodb";
+import { EStatus, IClient, IUser } from "types/mongodb";
 import { ulid } from "ulid";
 import logger from "utils/logger";
 import { CustomError } from "utils/response/custom-error/CustomError";
@@ -8,7 +8,7 @@ import { CustomError } from "utils/response/custom-error/CustomError";
 export const registerDevice = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const { name, identifier, modelType } = req.body;
@@ -17,7 +17,7 @@ export const registerDevice = async (
       const customError = new CustomError(
         409,
         "General",
-        "Devuce already exists",
+        "Devuce already exists"
       );
       return next(customError);
     }
@@ -37,7 +37,7 @@ export const registerDevice = async (
       "Raw",
       "Cannot register device",
       null,
-      err,
+      err
     );
     return next(customError);
   }
@@ -46,7 +46,7 @@ export const registerDevice = async (
 export const connectDeviceWithUser = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const userId = req.user?.id;
@@ -73,7 +73,7 @@ export const connectDeviceWithUser = async (
       "Raw",
       "Cannot connect device",
       null,
-      err,
+      err
     );
     return next(customError);
   }
@@ -81,7 +81,7 @@ export const connectDeviceWithUser = async (
 export const connectDeviceWithClient = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const deviceId = req.body.deviceId;
@@ -98,7 +98,7 @@ export const connectDeviceWithClient = async (
     }
     await Device.updateOne(
       { id: deviceId },
-      { status: EStatus.CONNECTED, name, modelType, clientId },
+      { status: EStatus.CONNECTED, name, modelType, clientId }
     );
     return res.customSuccess(200, "Device connected successfully");
   } catch (err) {
@@ -107,7 +107,7 @@ export const connectDeviceWithClient = async (
       "Raw",
       "Cannot connect device",
       null,
-      err,
+      err
     );
     return next(customError);
   }
@@ -116,7 +116,7 @@ export const connectDeviceWithClient = async (
 export const updateStatus = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const stateToBeUpdated = req.body.state as EStatus;
@@ -124,7 +124,7 @@ export const updateStatus = async (
     // validate if stateToBeUpdated is valid for current device state.
     await Device.findOneAndUpdate(
       { id: deviceId },
-      { status: stateToBeUpdated },
+      { status: stateToBeUpdated }
     ).lean();
     if (stateToBeUpdated === EStatus.UNREGISTERED) {
       await UserDeviceMapping.deleteMany({ deviceId });
@@ -136,7 +136,7 @@ export const updateStatus = async (
       "Raw",
       "Cannot connect device",
       null,
-      err,
+      err
     );
     return next(customError);
   }
@@ -145,7 +145,7 @@ export const updateStatus = async (
 export const getAllDevices = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const devices = await Device.find().lean();
@@ -162,7 +162,7 @@ export const getAllDevices = async (
     return res.customSuccess(
       200,
       "Devices Fetched Successfully.",
-      devicesToBeSent,
+      devicesToBeSent
     );
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
@@ -173,16 +173,27 @@ export const getAllDevices = async (
 export const getUserDevices = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const user = req.user;
-    if(!user){
+    if (!user) {
       const customError = new CustomError(409, "General", "User not found");
       return next(customError);
     }
-    const deviceIds = (await UserDeviceMapping.find({userId: user.id}).lean()).map(mapping => mapping.deviceId);
-    const devices = await Device.find({ id: { $in: deviceIds},}).lean();
+    // const user: IUser | null = await User.findById({userId: user.id});
+    const deviceIds = (
+      await UserDeviceMapping.find({ userId: user.id }).lean()
+    ).map((mapping) => mapping.deviceId);
+    const devices = await Device.find({ id: { $in: deviceIds } }).lean();
+    console.log(user);
+    const client: IClient | null = await Client.findOne({
+      id: user.clientId,
+    }).lean();
+    if (!client) {
+      const customError = new CustomError(409, "General", "Client not found");
+      return next(customError);
+    }
     const devicesToBeSent = devices.map((device) => ({
       id: device.id,
       clientId: device.clientId,
@@ -193,11 +204,23 @@ export const getUserDevices = async (
       status: device.status,
       updatedAt: device.updatedAt,
     }));
-    return res.customSuccess(
-      200,
-      "Devices Fetched Successfully.",
-      devicesToBeSent,
-    );
+    return res.customSuccess(200, "Devices Fetched Successfully.", {
+      email: user.email,
+      id: user.id,
+      name: user.name,
+      clientId: user.clientId,
+      client: {
+        id: client.id,
+        name: client.name,
+        logo: client.logo,
+        address: client.address,
+        email: client.email,
+        phone: client.phone,
+        website: client.website,
+      },
+      role: user.role,
+      device: devicesToBeSent,
+    });
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);

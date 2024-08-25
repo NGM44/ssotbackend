@@ -1,5 +1,6 @@
 import {
   adminSignUp,
+  changeNewPassword,
   changePassword,
   deactiveUser,
   deleteUser,
@@ -9,6 +10,7 @@ import {
   login,
   resetPassword,
   signUp,
+  updateUserDetail,
 } from "controllers/user";
 import { Router } from "express";
 import { checkJwt } from "utils/createJwtToken";
@@ -23,7 +25,10 @@ router.get("/all", checkJwt, getAllUsers);
 router.get("/deactive", checkJwt, deactiveUser);
 router.post("/login", login);
 router.post("/changePassword", checkJwt, changePassword);
+router.post("/changeNewPassword", checkJwt, changeNewPassword);
+
 router.post("/resetPassword", checkJwt, resetPassword);
 router.post("/forgotPassword", forgotPassword);
+router.put('/userDetails', checkJwt, updateUserDetail);
 
 export default router;

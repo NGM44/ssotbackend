@@ -16,7 +16,7 @@ import { CustomError } from "../utils/response/custom-error/CustomError";
 export const signUp = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { email, name, clientId } = req.body;
   const existingUser = await User.findOne({
@@ -30,7 +30,7 @@ export const signUp = async (
     const customError = new CustomError(
       409,
       "General",
-      "Cannot create user without client ID",
+      "Cannot create user without client ID"
     );
     return next(customError);
   }
@@ -53,7 +53,7 @@ export const signUp = async (
       "Raw",
       `User '${email}' can't be created`,
       null,
-      err,
+      err
     );
     return next(customError);
   }
@@ -62,7 +62,7 @@ export const signUp = async (
 export const adminSignUp = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { email, name } = req.body;
   const existingUser = await User.findOne({
@@ -91,7 +91,7 @@ export const adminSignUp = async (
       "Raw",
       `User '${email}' can't be created`,
       null,
-      err,
+      err
     );
     return next(customError);
   }
@@ -100,7 +100,7 @@ export const adminSignUp = async (
 export const generateCredentials = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { email } = req.body;
   const existingUser = await User.findOne({
@@ -117,10 +117,10 @@ export const generateCredentials = async (
       { id: existingUser.id },
       {
         password: hashedPassword,
-      },
+      }
     );
     let html = readFileSync(
-      `${emailTemplatesFolder}/credentials-generated.html`,
+      `${emailTemplatesFolder}/credentials-generated.html`
     ).toString();
     html = html.replace("#email#", existingUser.email);
     html = html.replace("#name#", existingUser.name);
@@ -135,7 +135,7 @@ export const generateCredentials = async (
     return res.customSuccess(
       200,
       "Generated Credentials successfully",
-      password,
+      password
     );
   } catch (err) {
     const customError = new CustomError(
@@ -143,7 +143,7 @@ export const generateCredentials = async (
       "Raw",
       `User '${email}' can't be created`,
       null,
-      err,
+      err
     );
     return next(customError);
   }
@@ -152,7 +152,7 @@ export const generateCredentials = async (
 export const deleteUser = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const id = req.params.id;
   try {
@@ -177,7 +177,7 @@ export const deleteUser = async (
 export const getAllUsers = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   try {
     const users: IUser[] = await User.find({
@@ -197,10 +197,42 @@ export const getAllUsers = async (
   }
 };
 
+export const updateUserDetail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userDetail = req.body;
+    if (!userDetail.id) {
+      const customError = new CustomError(500, "General", "user id not found");
+      return next(customError);
+    }
+
+    const updatedUser: IUser | null = await User.findOneAndUpdate(
+      { id: userDetail.id },
+      { name: userDetail.name },
+      { new: true }
+    );
+    if (!updatedUser) {
+      const customError = new CustomError(
+        500,
+        "General",
+        "Failed to update user"
+      );
+      return next(customError);
+    }
+    return res.customSuccess(200, "User Updated Successfully.", updatedUser);
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};
+
 export const deactiveUser = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const email = req.query.email?.toString();
   const deactivated = req.query.deactivated !== "false";
@@ -218,20 +250,20 @@ export const deactiveUser = async (
     const updatedUser: IUser | null = await User.findOneAndUpdate(
       { id: user.id },
       { deactivated },
-      { new: true },
+      { new: true }
     );
     if (!updatedUser) {
       const customError = new CustomError(
         500,
         "General",
-        "Failed to update user",
+        "Failed to update user"
       );
       return next(customError);
     }
     return res.customSuccess(
       200,
       "User Deactivated Successfully.",
-      updatedUser,
+      updatedUser
     );
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
@@ -242,7 +274,7 @@ export const deactiveUser = async (
 export const login = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { email, password } = req.body;
   try {
@@ -273,7 +305,7 @@ export const login = async (
         "Raw",
         "OOPS!! \n Something went wrong while generating Token",
         ["OOPS! Something went wrong \n Try Once Again"],
-        err,
+        err
       );
       return next(customError);
     }
@@ -283,10 +315,63 @@ export const login = async (
   }
 };
 
+export const changeNewPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { newPassword } = req.body;
+  const userId = req.user?.id || "";
+  logger.info(`User with user id ${userId} is trying to change password`);
+  try {
+    const user: IUser | null = await User.findById(userId);
+    if (!user) {
+      const customError = new CustomError(500, "General", "Not Found", [
+        "User not found!",
+      ]);
+      return next(customError);
+    }
+
+    if (!newPassword) {
+      const customError = new CustomError(
+        400,
+        "General",
+        "Incorrect old password",
+        ["Incorrect old password"]
+      );
+      return next(customError);
+    }
+
+    const changedPassword = bcrypt.hashSync(newPassword, 8);
+    try {
+      await User.updateOne({ id: user.id }, { password: changedPassword });
+      return res.customSuccess(200, "password successfully changed");
+    } catch (error) {
+      const customError = new CustomError(
+        500,
+        "Raw",
+        "Password could not be updated",
+        null,
+        error
+      );
+      return next(customError);
+    }
+  } catch (error) {
+    const customError = new CustomError(
+      500,
+      "Raw",
+      "Password could not be updated",
+      null,
+      error
+    );
+    return next(customError);
+  }
+};
+
 export const changePassword = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { currentPassword, newPassword } = req.body;
   const userId = req.user?.id || "";
@@ -302,7 +387,7 @@ export const changePassword = async (
     if (currentPassword) {
       const currentPswdMatched = checkIfPasswordMatch(
         currentPassword,
-        user.password,
+        user.password
       );
 
       if (!currentPswdMatched) {
@@ -310,7 +395,7 @@ export const changePassword = async (
           400,
           "General",
           "Incorrect old password",
-          ["Incorrect old password"],
+          ["Incorrect old password"]
         );
         return next(customError);
       }
@@ -325,7 +410,7 @@ export const changePassword = async (
         "Raw",
         "Password could not be updated",
         null,
-        error,
+        error
       );
       return next(customError);
     }
@@ -335,7 +420,7 @@ export const changePassword = async (
       "Raw",
       "Password could not be updated",
       null,
-      error,
+      error
     );
     return next(customError);
   }
@@ -344,7 +429,7 @@ export const changePassword = async (
 export const resetPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { newPassword } = req.body;
   const userId = req.user?.id || "";
@@ -364,7 +449,7 @@ export const resetPassword = async (
       return res.customSuccess(
         200,
         "password successfully changed",
-        changedPassword,
+        changedPassword
       );
     } catch (error) {
       const customError = new CustomError(
@@ -372,7 +457,7 @@ export const resetPassword = async (
         "Raw",
         "Password could not be updated",
         null,
-        error,
+        error
       );
       return next(customError);
     }
@@ -382,7 +467,7 @@ export const resetPassword = async (
       "Raw",
       "Password could not be updated",
       null,
-      error,
+      error
     );
     return next(customError);
   }
@@ -398,7 +483,7 @@ function generateRandomPassword() {
 export const forgotPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const { email } = req.body;
   try {
@@ -416,7 +501,7 @@ export const forgotPassword = async (
         500,
         "General",
         "Account has been Deactivated",
-        ["Account has been Deactivated"],
+        ["Account has been Deactivated"]
       );
       return next(customError);
     }
@@ -446,7 +531,7 @@ export const forgotPassword = async (
     return res.customSuccess(
       200,
       "Reset Passsword link has been shared through mail",
-      link,
+      link
     );
   } catch (error) {
     const customError = new CustomError(500, "Raw", "Error", null, error);

@@ -18,4 +18,5 @@ router.put("/updateStatus", updateStatus);
 router.get("/all", checkJwt, getAllDevices);
 router.get("/user", checkJwt, getUserDevices);
 
+
 export default router;
