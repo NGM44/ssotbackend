@@ -1,8 +1,10 @@
-import { client } from "config";
 import { WeatherData } from "db/mongodb";
+import mqtt from "mqtt";
 import { ulid } from "ulid";
 
 export const consumeWeatherData = async () => {
+  const mqttUrl = process.env.MQTTURL!;
+  const client = mqtt.connect(mqttUrl);
   client.on('connect', () => {
     console.log('Connected to MQTT broker from consumer side');
     client.subscribe('weather_data/#', (err) => {
