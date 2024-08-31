@@ -1,16 +1,10 @@
 import { WeatherData } from "db/mongodb";
-import { readFileSync } from "fs";
 import mqtt from "mqtt";
 import { ulid } from "ulid";
 
 export const consumeWeatherData = async () => {
   const mqttUrl = process.env.MQTTURL!;
-  const client = mqtt.connect(mqttUrl,{
-    rejectUnauthorized: false,
-    ca: readFileSync('/etc/letsencrypt/live/api.sensormagics.com/chain.pem'),
-    cert: readFileSync('/etc/letsencrypt/live/api.sensormagics.com/cert.pem'),
-    key: readFileSync('/etc/letsencrypt/live/api.sensormagics.com/privkey.pem')
-  });
+  const client = mqtt.connect(mqttUrl);
   client.on('connect', () => {
     console.log('Connected to MQTT broker from consumer side');
     client.subscribe('weather_data/#', (err) => {
