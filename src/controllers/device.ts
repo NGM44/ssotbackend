@@ -219,7 +219,7 @@ export const getUserDevices = async (
         website: client.website,
       },
       role: user.role,
-      device: devicesToBeSent,
+      devices: devicesToBeSent,
     });
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
