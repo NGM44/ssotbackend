@@ -1,6 +1,6 @@
 import { Client, Device,GasMapping,UserDeviceMapping } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { EStatus, IClient} from "types/mongodb";
+import { EStatus, IClient, IGasMappingDto} from "types/mongodb";
 import { ulid } from "ulid";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
@@ -212,7 +212,7 @@ export const getUserDevices = async (
         devices: devicesToBeSent,
       });
     }
-    const gasMapping = await GasMapping.find({clientId: client.id});
+    const gasMapping: IGasMappingDto | null = await GasMapping.findOne({clientId: client.id});
     return res.customSuccess(200, "Devices Fetched Successfully.", {
       email: user.email,
       id: user.id,
