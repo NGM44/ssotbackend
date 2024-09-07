@@ -23,12 +23,12 @@ export const signUp = async (
     email,
   });
   if (existingUser) {
-    const customError = new CustomError(409, "General", "User already exists");
+    const customError = new CustomError(500, "General", "User already exists");
     return next(customError);
   }
   if (!clientId) {
     const customError = new CustomError(
-      409,
+      500,
       "General",
       "Cannot create user without client ID"
     );
@@ -69,7 +69,7 @@ export const adminSignUp = async (
     email,
   });
   if (existingUser) {
-    const customError = new CustomError(409, "General", "User already exists");
+    const customError = new CustomError(500, "General", "User already exists");
     return next(customError);
   }
 

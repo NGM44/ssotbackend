@@ -11,13 +11,13 @@ export const registerDevice = async (
   next: NextFunction
 ) => {
   try {
-    const { name, identifier, modelType } = req.body;
+    const { name, identifier, modelType, location } = req.body;
     const existingDevice = await Device.findOne({ identifier }).lean();
     if (existingDevice) {
       const customError = new CustomError(
-        409,
+        500,
         "General",
-        "Devuce already exists"
+        "Device already exists"
       );
       return next(customError);
     }
@@ -25,11 +25,11 @@ export const registerDevice = async (
       id: ulid(),
       modelType,
       identifier,
+      location: location || "",
       name: name || identifier,
       clientId: null,
       status: EStatus.REGISTERED,
     });
-    logger.info("Device Registered successfully");
     return res.customSuccess(200, "Device Registered successfully", device.id);
   } catch (err) {
     const customError = new CustomError(
@@ -53,15 +53,15 @@ export const connectDeviceWithUser = async (
     const deviceId = req.body.deviceId;
     const clientId = req.body.clientId;
     if (!userId) {
-      const customError = new CustomError(409, "General", "User not found");
+      const customError = new CustomError(500, "General", "User not found");
       return next(customError);
     }
     if (!deviceId) {
-      const customError = new CustomError(409, "General", "Device not found");
+      const customError = new CustomError(500, "General", "Device not found");
       return next(customError);
     }
     if (!clientId) {
-      const customError = new CustomError(409, "General", "Client not found");
+      const customError = new CustomError(500, "General", "Client not found");
       return next(customError);
     }
     await UserDeviceMapping.create({ id: ulid(), deviceId, userId });
@@ -88,17 +88,18 @@ export const connectDeviceWithClient = async (
     const name = req.body.name;
     const modelType = req.body.modelType;
     const clientId = req.body.clientId;
+    const location = req.body.location;
     if (!deviceId) {
-      const customError = new CustomError(409, "General", "Device not found");
+      const customError = new CustomError(500, "General", "Device not found");
       return next(customError);
     }
     if (!clientId) {
-      const customError = new CustomError(409, "General", "Client not found");
+      const customError = new CustomError(500, "General", "Client not found");
       return next(customError);
     }
     await Device.updateOne(
       { id: deviceId },
-      { status: EStatus.CONNECTED, name, modelType, clientId }
+      { status: EStatus.CONNECTED, name, modelType, clientId , location }
     );
     return res.customSuccess(200, "Device connected successfully");
   } catch (err) {
@@ -156,6 +157,7 @@ export const getAllDevices = async (
       identifier: device.identifier,
       modelType: device.modelType,
       name: device.name,
+      location: device.location,
       status: device.status,
       updatedAt: device.updatedAt,
     }));
@@ -178,7 +180,7 @@ export const getUserDevices = async (
   try {
     const user = req.user;
     if (!user) {
-      const customError = new CustomError(409, "General", "User not found");
+      const customError = new CustomError(500, "General", "User not found");
       return next(customError);
     }
     // const user: IUser | null = await User.findById({userId: user.id});
@@ -186,12 +188,11 @@ export const getUserDevices = async (
       await UserDeviceMapping.find({ userId: user.id }).lean()
     ).map((mapping) => mapping.deviceId);
     const devices = await Device.find({ id: { $in: deviceIds } }).lean();
-    console.log(user);
     const client: IClient | null = await Client.findOne({
       id: user.clientId,
     }).lean();
     if (!client) {
-      const customError = new CustomError(409, "General", "Client not found");
+      const customError = new CustomError(500, "General", "Client not found");
       return next(customError);
     }
     const devicesToBeSent = devices.map((device) => ({
@@ -200,6 +201,7 @@ export const getUserDevices = async (
       createdAt: device.createdAt,
       identifier: device.identifier,
       modelType: device.modelType,
+      location: device.location,
       name: device.name,
       status: device.status,
       updatedAt: device.updatedAt,

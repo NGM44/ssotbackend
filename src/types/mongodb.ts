@@ -83,6 +83,7 @@ export interface IDevice extends Document {
   id: string;
   name: string;
   identifier: string;
+  location: string;
   status: string;
   modelType: string;
   clientId: string;

@@ -1,15 +1,10 @@
-import { updateStatus } from "controllers/device";
 import {
   createDataFromPostman,
   generateReport,
   getData,
 } from "controllers/weather";
 import { Router } from "express";
-import {
-  checkDeviceJwt,
-  checkJwt,
-  createDeviceToken,
-} from "utils/createJwtToken";
+import { checkJwt, createDeviceToken } from "utils/createJwtToken";
 
 const router = Router();
 
