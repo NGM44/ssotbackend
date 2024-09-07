@@ -17,7 +17,7 @@ export const createClient = async (
     }).lean();
     if (existingClient) {
       const customError = new CustomError(
-        409,
+        500,
         "General",
         "Client already exists",
       );
@@ -32,7 +32,6 @@ export const createClient = async (
       phone: clientData.phone,
       website: clientData.website,
     });
-    logger.info("Client Created successfully");
     return res.customSuccess(200, "Client Created successfully");
   } catch (err) {
     const customError = new CustomError(
@@ -55,7 +54,7 @@ export const getClient = async (
     const clientId = req.params.id;
     if (!clientId) {
       const customError = new CustomError(
-        409,
+        500,
         "General",
         "Client ID not found",
       );
@@ -65,7 +64,7 @@ export const getClient = async (
       id: clientId,
     }).lean();
     if (!client) {
-      const customError = new CustomError(409, "General", "Client not found");
+      const customError = new CustomError(500, "General", "Client not found");
       return next(customError);
     }
     const clientUsers: IUser[] = await User.find({ clientId }).lean();
@@ -85,6 +84,7 @@ export const getClient = async (
         clientId: device.clientId,
         createdAt: device.createdAt,
         identifier: device.identifier,
+        location: device.location,
         modelType: device.modelType,
         name: device.name,
         status: device.status,
@@ -140,6 +140,7 @@ export const getAllClient = async (
           clientId: device.clientId,
           createdAt: device.createdAt,
           identifier: device.identifier,
+          location: device.location,
           modelType: device.modelType,
           name: device.name,
           status: device.status,
