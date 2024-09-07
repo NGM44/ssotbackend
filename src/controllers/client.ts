@@ -1,8 +1,7 @@
-import { Client, Device, User } from "db/mongodb";
+import { Client, Device, GasMapping, User } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { IClient, IClientDto, IDevice, IUser } from "types/mongodb";
+import { IClient, IClientDto, IDevice, IGasMapping, IGasMappingDto, IUser } from "types/mongodb";
 import { ulid } from "ulid";
-import logger from "utils/logger";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
 export const createClient = async (
@@ -23,7 +22,7 @@ export const createClient = async (
       );
       return next(customError);
     }
-    await Client.create({
+    const createdClient = await Client.create({
       id: ulid(),
       name: clientData.name,
       logo: clientData.logo,
@@ -31,6 +30,16 @@ export const createClient = async (
       email: clientData.email,
       phone: clientData.phone,
       website: clientData.website,
+    });
+    await GasMapping.create({
+      id: ulid(),
+      gas1 : "Gas 1",
+      gas2 : "Gas 2",
+      gas3 : "Gas 3",
+      gas4 : "Gas 4",
+      gas5 : "Gas 5",
+      gas6 : "Gas 6",
+      clientId: createdClient.id,
     });
     return res.customSuccess(200, "Client Created successfully");
   } catch (err) {
@@ -44,6 +53,26 @@ export const createClient = async (
     return next(customError);
   }
 };
+
+export const updateGasMapping = async( req: Request, res: Response, next: NextFunction) => {
+  try{
+    const gasMapping: IGasMappingDto = req.body;
+    await GasMapping.updateOne({clientId: gasMapping.clientId} , {gas1: gasMapping.gas1, gas2: gasMapping.gas2, gas3: gasMapping.gas3, gas4: gasMapping.gas4, gas5: gasMapping.gas5, gas6: gasMapping.gas6})
+    return res.customSuccess(
+      200,
+      "Client Gas Mapping updated successfully",
+    );
+  } catch (err) {
+    const customError = new CustomError(
+      400,
+      "Raw",
+      "Cannot update client gas mapping",
+      null,
+      err,
+    );
+    return next(customError);
+  }
+}
 
 export const getClient = async (
   req: Request,
@@ -69,6 +98,7 @@ export const getClient = async (
     }
     const clientUsers: IUser[] = await User.find({ clientId }).lean();
     const clientDevices: IDevice[] = await Device.find({ clientId }).lean();
+    const gasMapping = await GasMapping.findOne({clientId}).lean();
     const clientDetailsToBeSent: IClientDto = {
       id: client.id,
       address: client.address,
@@ -101,6 +131,7 @@ export const getClient = async (
         role: user.role,
         updatedAt: user.updatedAt,
       })),
+      gasMapping: gasMapping === null ? undefined : gasMapping
     };
     return res.customSuccess(
       200,
@@ -132,6 +163,7 @@ export const getAllClient = async (
     const clientDevices: IDevice[] = await Device.find({
       clientId: { $in: clients.map((c) => c.id) },
     }).lean();
+    const gasMappings: IGasMapping[] = await GasMapping.find({clientId: { $in: clients.map((c) => c.id) }}).lean();
     const clientDetailsToBeSent: IClientDto[] = clients.map((client) => {
       const devices = clientDevices
         .filter((d) => d.clientId === client.id)
@@ -159,6 +191,7 @@ export const getAllClient = async (
           role: user.role,
           updatedAt: user.updatedAt,
         }));
+      const gasMapping = gasMappings.find(mapping => mapping.clientId === client.id);
       return {
         id: client.id,
         address: client.address,
@@ -171,6 +204,7 @@ export const getAllClient = async (
         website: client.website,
         devices,
         users,
+        gasMapping
       };
     });
     return res.customSuccess(

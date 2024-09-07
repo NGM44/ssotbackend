@@ -53,6 +53,16 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
+export interface IGasMapping extends Document {
+    gas1:string;
+    gas2:string;
+    gas3:string;
+    gas4:string;
+    gas5:string;
+    gas6:string;
+    clientId: string;
+}
+
 export interface IClient extends Document {
   id: string;
   name: string;
@@ -69,6 +79,7 @@ export interface IClientDto extends Omit<IClient, keyof Document> {
   id: string;
   users: IUserDto[];
   devices: IDeviceDto[];
+  gasMapping?: IGasMappingDto;
 }
 
 export interface IUserDto extends Omit<IUser, keyof Document> {
@@ -78,6 +89,8 @@ export interface IUserDto extends Omit<IUser, keyof Document> {
 export interface IDeviceDto extends Omit<IDevice, keyof Document> {
   id: string;
 }
+
+export interface IGasMappingDto extends Omit<IGasMapping, keyof Document> {}
 
 export interface IDevice extends Document {
   id: string;

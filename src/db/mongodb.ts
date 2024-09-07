@@ -6,6 +6,7 @@ import {
   IWeatherData,
   ERole,
   EStatus,
+  IGasMapping,
 } from "types/mongodb";
 import { ulid } from "ulid";
 
@@ -65,6 +66,23 @@ const deviceSchema = new Schema(
     location: {type: String , required: true},
     clientId: { type: String, ref: "Client" },
     modelType: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
+  },
+);
+
+const gasMappingSchema = new Schema(
+  {
+    gas1: {type: String, required: true},
+    gas2: {type: String, required: true},
+    gas3: {type: String, required: true},
+    gas4: {type: String, required: true},
+    gas5: {type: String, required: true},
+    gas6: {type: String, required: true},
+    clientId: { type: String, ref: "Client" },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
@@ -133,5 +151,6 @@ const WeatherData = mongoose.model<IWeatherData>(
   "WeatherData",
   weatherDataSchema,
 );
+const GasMapping = mongoose.model<IGasMapping>("GasMapping", gasMappingSchema);
 
-export { Client, Device, User, UserDeviceMapping, WeatherData };
+export { Client, Device, User, UserDeviceMapping, WeatherData, GasMapping };

@@ -1,8 +1,7 @@
-import { Client, Device, User, UserDeviceMapping } from "db/mongodb";
+import { Client, Device,GasMapping,UserDeviceMapping } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { EStatus, IClient, IUser } from "types/mongodb";
+import { EStatus, IClient} from "types/mongodb";
 import { ulid } from "ulid";
-import logger from "utils/logger";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
 export const registerDevice = async (
@@ -213,6 +212,7 @@ export const getUserDevices = async (
         devices: devicesToBeSent,
       });
     }
+    const gasMapping = await GasMapping.find({clientId: client.id});
     return res.customSuccess(200, "Devices Fetched Successfully.", {
       email: user.email,
       id: user.id,
@@ -229,6 +229,7 @@ export const getUserDevices = async (
       },
       role: user.role,
       devices: devicesToBeSent,
+      gasMapping
     });
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
