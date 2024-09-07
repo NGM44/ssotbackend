@@ -62,6 +62,7 @@ const deviceSchema = new Schema(
     name: { type: String, required: true },
     identifier: { type: String, required: true },
     status: { type: String, enum: statuses, required: true },
+    location: {type: String , required: true},
     clientId: { type: String, ref: "Client" },
     modelType: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
