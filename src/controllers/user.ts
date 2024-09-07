@@ -122,9 +122,11 @@ export const generateCredentials = async (
     let html = readFileSync(
       `${emailTemplatesFolder}/credentials-generated.html`
     ).toString();
+    const url  = `https://sensormagics.com/login/${existingUser.email}/${password}`
     html = html.replace("#email#", existingUser.email);
     html = html.replace("#name#", existingUser.name);
     html = html.replace("#password#", password);
+    html = html.replace("url", url);
     const sendEmailDto: SendEmailDto = {
       from: process.env.SENDGRID_FROM!,
       to: existingUser.email,

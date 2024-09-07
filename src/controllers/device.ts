@@ -191,10 +191,7 @@ export const getUserDevices = async (
     const client: IClient | null = await Client.findOne({
       id: user.clientId,
     }).lean();
-    if (!client) {
-      const customError = new CustomError(500, "General", "Client not found");
-      return next(customError);
-    }
+    
     const devicesToBeSent = devices.map((device) => ({
       id: device.id,
       clientId: device.clientId,
@@ -206,6 +203,16 @@ export const getUserDevices = async (
       status: device.status,
       updatedAt: device.updatedAt,
     }));
+    if (!client) {
+      return res.customSuccess(200, "Devices Fetched Successfully.", {
+        email: user.email,
+        id: user.id,
+        name: user.name,
+        clientId: user.clientId,
+        role: user.role,
+        devices: devicesToBeSent,
+      });
+    }
     return res.customSuccess(200, "Devices Fetched Successfully.", {
       email: user.email,
       id: user.id,
