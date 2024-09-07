@@ -182,11 +182,7 @@ export const getUserDevices = async (
       const customError = new CustomError(500, "General", "User not found");
       return next(customError);
     }
-    // const user: IUser | null = await User.findById({userId: user.id});
-    const deviceIds = (
-      await UserDeviceMapping.find({ userId: user.id }).lean()
-    ).map((mapping) => mapping.deviceId);
-    const devices = await Device.find({ id: { $in: deviceIds } }).lean();
+    const devices = await Device.find({ clientId: user.clientId }).lean();
     const client: IClient | null = await Client.findOne({
       id: user.clientId,
     }).lean();
