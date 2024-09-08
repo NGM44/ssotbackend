@@ -1,5 +1,6 @@
 import { WeatherData } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
+import { IWeatherData } from "types/mongodb";
 import { generateWeatherReport } from "utils/report";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
@@ -12,57 +13,59 @@ export const getData = async (
     const deviceId = req.params.id;
     const endDate = new Date(req.params.to);
     const startDate = new Date(req.params.from);
-    const allData = await WeatherData.find(
+    const metric = req.params.metric;
+
+    // Define the valid metrics to select from
+    const validMetrics:{ [key in keyof IWeatherData]?: 1 } = {
+      temperature: 1,
+      humidity: 1,
+      pressure: 1,
+      co2: 1,
+      vocs: 1,
+      light: 1,
+      noise: 1,
+      pm1: 1,
+      pm25: 1,
+      pm4: 1,
+      pm10: 1,
+      aiq: 1,
+      gas1: 1,
+      gas2: 1,
+      gas3: 1,
+      gas4: 1,
+      gas5: 1,
+      gas6: 1,
+    };
+
+    // Check if the requested metric is valid
+    if (!validMetrics.hasOwnProperty(metric)) {
+      return res.status(400).json({ message: "Invalid metric" });
+    }
+
+    // Dynamically select only the requested metric along with timestamp
+    const projection = {
+      timestamp: 1,
+      [metric]: 1,
+      _id: 0, // exclude _id
+    };
+
+    const allData: IWeatherData[] = await WeatherData.find(
       { timestamp: { $gte: startDate, $lte: endDate }, deviceId },
-      {
-        timestamp: 1, temperature: 1, humidity: 1,
-        pressure: 1,
-        co2: 1,
-        vocs: 1,
-        light: 1,
-        noise: 1,
-        pm1: 1,
-        pm25: 1,
-        pm4: 1,
-        pm10: 1,
-        aiq: 1,
-        gas1: 1,
-        gas2: 1,
-        gas3: 1,
-        gas4: 1,
-        gas5: 1,
-        gas6: 1,
-        _id: 0
-      },
+      projection,
     ).lean();
+
     const dataToSend = allData.map((d) => ({
-      temperature: parseFloat(d.temperature.toFixed(2)),
-      humidity: parseFloat(d.humidity.toFixed(2)),
-      pressure: parseFloat(d.pressure.toFixed(2)),
-      co2: parseFloat(d.co2.toFixed(2)),
-      vocs: parseFloat(d.vocs.toFixed(2)),
-      light: parseFloat(d.light.toFixed(2)),
-      noise: parseFloat(d.noise.toFixed(2)),
-      pm1: parseFloat(d.pm1.toFixed(2)),
-      pm25: parseFloat(d.pm25.toFixed(2)),
-      pm4: parseFloat(d.pm4.toFixed(2)),
-      pm10: parseFloat(d.pm10.toFixed(2)),
-      aiq: parseFloat(d.aiq.toFixed(2)),
-      gas1: parseFloat(d.gas1.toFixed(2)),
-      gas2: parseFloat(d.gas2.toFixed(2)),
-      gas3: parseFloat(d.gas3.toFixed(2)),
-      gas4: parseFloat(d.gas4.toFixed(2)),
-      gas5: parseFloat(d.gas5.toFixed(2)),
-      gas6: parseFloat(d.gas6.toFixed(2)),
-      dateString: `${d.timestamp.toDateString()} ${d.timestamp.toTimeString().split(" ")[0]
-        }`,
+      [metric]: parseFloat((d as any)[metric]?.toFixed(2)),
+      dateString: `${d.timestamp.toDateString()} ${d.timestamp.toTimeString().split(" ")[0]}`,
     }));
+
     return res.customSuccess(200, "Fetched Successfully", dataToSend);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
   }
 };
+
 
 export const getLatestData = async (
   req: Request,
