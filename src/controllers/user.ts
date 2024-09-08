@@ -126,7 +126,7 @@ export const generateCredentials = async (
     html = html.replace("#email#", existingUser.email);
     html = html.replace("#name#", existingUser.name);
     html = html.replace("#password#", password);
-    html = html.replace("url", url);
+    html = html.replace("#url#", url);
     const sendEmailDto: SendEmailDto = {
       from: process.env.SENDGRID_FROM!,
       to: existingUser.email,

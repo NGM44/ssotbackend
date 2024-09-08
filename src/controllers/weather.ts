@@ -64,6 +64,72 @@ export const getData = async (
   }
 };
 
+export const getLatestData = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const deviceId = req.params.id;
+    const latestData = await WeatherData.findOne(
+      { deviceId },
+      {
+        timestamp: 1,
+        temperature: 1,
+        humidity: 1,
+        pressure: 1,
+        co2: 1,
+        vocs: 1,
+        light: 1,
+        noise: 1,
+        pm1: 1,
+        pm25: 1,
+        pm4: 1,
+        pm10: 1,
+        aiq: 1,
+        gas1: 1,
+        gas2: 1,
+        gas3: 1,
+        gas4: 1,
+        gas5: 1,
+        gas6: 1,
+        _id: 0
+      }
+    )
+      .sort({ timestamp: -1 })
+      .lean();
+
+    // Format the latest data
+    const dataToSend =  latestData && {
+      temperature: parseFloat(latestData.temperature.toFixed(2)),
+      humidity: parseFloat(latestData.humidity.toFixed(2)),
+      pressure: parseFloat(latestData.pressure.toFixed(2)),
+      co2: parseFloat(latestData.co2.toFixed(2)),
+      vocs: parseFloat(latestData.vocs.toFixed(2)),
+      light: parseFloat(latestData.light.toFixed(2)),
+      noise: parseFloat(latestData.noise.toFixed(2)),
+      pm1: parseFloat(latestData.pm1.toFixed(2)),
+      pm25: parseFloat(latestData.pm25.toFixed(2)),
+      pm4: parseFloat(latestData.pm4.toFixed(2)),
+      pm10: parseFloat(latestData.pm10.toFixed(2)),
+      aiq: parseFloat(latestData.aiq.toFixed(2)),
+      gas1: parseFloat(latestData.gas1.toFixed(2)),
+      gas2: parseFloat(latestData.gas2.toFixed(2)),
+      gas3: parseFloat(latestData.gas3.toFixed(2)),
+      gas4: parseFloat(latestData.gas4.toFixed(2)),
+      gas5: parseFloat(latestData.gas5.toFixed(2)),
+      gas6: parseFloat(latestData.gas6.toFixed(2)),
+      dateString: `${latestData.timestamp.toDateString()} ${latestData.timestamp.toTimeString().split(" ")[0]}`
+    };
+
+    return res.customSuccess(200, "Fetched Successfully", dataToSend);
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error fetching data", null, err);
+    return next(customError);
+  }
+};
+
+
 export const createDataFromPostman = async (
   req: Request,
   res: Response,
