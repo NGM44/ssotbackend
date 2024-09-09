@@ -7,6 +7,9 @@ import {
   ERole,
   EStatus,
   IGasMapping,
+  ISession,
+  INotification,
+  IWeatherDataRange,
 } from "types/mongodb";
 import { ulid } from "ulid";
 
@@ -37,7 +40,7 @@ const userSchema = new Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  },
+  }
 );
 
 const clientSchema = new Schema(
@@ -49,12 +52,15 @@ const clientSchema = new Schema(
     email: { type: String, required: true },
     phone: { type: String },
     website: { type: String },
+    bannerMessage: { type: String },
+    showBanner: { type: Boolean },
+    bannerLink: { type: String },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  },
+  }
 );
 
 const deviceSchema = new Schema(
@@ -63,7 +69,7 @@ const deviceSchema = new Schema(
     name: { type: String, required: true },
     identifier: { type: String, required: true },
     status: { type: String, enum: statuses, required: true },
-    location: {type: String , required: true},
+    location: { type: String, required: true },
     clientId: { type: String, ref: "Client" },
     modelType: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
@@ -71,24 +77,38 @@ const deviceSchema = new Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  },
+  }
 );
+
+const sessionSchema = new Schema({
+  id: { type: String, required: true, unique: true },
+  userId: { type: String, ref: "User", required: true },
+  jwt: { type: String, required: true },
+  isValid: { type: Boolean, default: true },
+});
+
+const notificationSchema = new Schema({
+  id: { type: String, required: true, unique: true },
+  userId: { type: String, ref: "User", required: true },
+  notification: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+});
 
 const gasMappingSchema = new Schema(
   {
-    gas1: {type: String, required: true},
-    gas2: {type: String, required: true},
-    gas3: {type: String, required: true},
-    gas4: {type: String, required: true},
-    gas5: {type: String, required: true},
-    gas6: {type: String, required: true},
+    gas1: { type: String, required: true },
+    gas2: { type: String, required: true },
+    gas3: { type: String, required: true },
+    gas4: { type: String, required: true },
+    gas5: { type: String, required: true },
+    gas6: { type: String, required: true },
     clientId: { type: String, ref: "Client" },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  },
+  }
 );
 
 const userDeviceMappingSchema = new Schema(
@@ -101,11 +121,54 @@ const userDeviceMappingSchema = new Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  },
+  }
 );
 
 userDeviceMappingSchema.index({ deviceId: 1, userId: 1 }, { unique: true });
 
+const weatherDataRangeSchema = new Schema({
+  id: { type: String, default: ulid(), unique: true, required: true },
+  temperatureMin: { type: Number, required: true },
+  temperatureMax: { type: Number, required: true },
+  humidityMin: { type: Number, required: true },
+  humidityMax: { type: Number, required: true },
+  pressureMin: { type: Number, required: true },
+  pressureMax: { type: Number, required: true },
+  co2Min: { type: Number, required: true },
+  co2Max: { type: Number, required: true },
+  vocsMin: { type: Number, required: true },
+  vocsMax: { type: Number, required: true },
+  lightMin: { type: Number, required: true },
+  lightMax: { type: Number, required: true },
+  noiseMin: { type: Number, required: true },
+  noiseMax: { type: Number, required: true },
+  pm1Min: { type: Number, required: true },
+  pm1Max: { type: Number, required: true },
+  pm25Min: { type: Number, required: true },
+  pm25Max: { type: Number, required: true },
+  pm4Min: { type: Number, required: true },
+  pm4Max: { type: Number, required: true },
+  pm10Min: { type: Number, required: true },
+  pm10Max: { type: Number, required: true },
+  aiqMin: { type: Number, required: true },
+  aiqMax: { type: Number, required: true },
+  gas1Min: { type: Number, required: true },
+  gas1Max: { type: Number, required: true },
+  gas2Min: { type: Number, required: true },
+  gas2Max: { type: Number, required: true },
+  gas3Min: { type: Number, required: true },
+  gas3Max: { type: Number, required: true },
+  gas4Min: { type: Number, required: true },
+  gas4Max: { type: Number, required: true },
+  gas5Min: { type: Number, required: true },
+  gas5Max: { type: Number, required: true },
+  gas6Min: { type: Number, required: true },
+  gas6Max: { type: Number, required: true },
+  timestamp: { type: Date, default: Date.now },
+  deviceId: { type: String, ref: "Device", required: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
 const weatherDataSchema = new Schema(
   {
     id: { type: String, default: ulid(), unique: true, required: true },
@@ -138,19 +201,44 @@ const weatherDataSchema = new Schema(
       timeField: "timestamp",
       granularity: "seconds",
     },
-  },
+  }
 );
 const User = mongoose.model<IUser>("User", userSchema);
 const Client = mongoose.model<IClient>("Client", clientSchema);
 const Device = mongoose.model<IDevice>("Device", deviceSchema);
 const UserDeviceMapping = mongoose.model(
   "UserDeviceMapping",
-  userDeviceMappingSchema,
+  userDeviceMappingSchema
 );
 const WeatherData = mongoose.model<IWeatherData>(
   "WeatherData",
-  weatherDataSchema,
+  weatherDataSchema
 );
-const GasMapping = mongoose.model<IGasMapping>("GasMapping", gasMappingSchema);
 
-export { Client, Device, User, UserDeviceMapping, WeatherData, GasMapping };
+const WeatherDataRange = mongoose.model<IWeatherDataRange>(
+  "WeatherDataRange",
+  weatherDataRangeSchema
+);
+
+const GasMapping = mongoose.model<IGasMapping>("GasMapping", gasMappingSchema);
+const SessionMapping = mongoose.model<ISession>(
+  "SessionMapping",
+  sessionSchema
+);
+
+const Notification = mongoose.model<INotification>(
+  "Notification",
+  notificationSchema
+);
+
+export {
+  Client,
+  Device,
+  User,
+  UserDeviceMapping,
+  WeatherData,
+  GasMapping,
+  SessionMapping,
+  Notification,
+  WeatherDataRange,
+};

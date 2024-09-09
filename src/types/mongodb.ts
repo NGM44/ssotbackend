@@ -10,9 +10,9 @@ export interface IWeatherData extends Document {
   light: number;
   noise: number;
   pm1: number;
-  pm25 : number;
-  pm4 : number;
-  pm10 : number;
+  pm25: number;
+  pm4: number;
+  pm10: number;
   aiq: number;
   gas1: number;
   gas2: number;
@@ -21,6 +21,49 @@ export interface IWeatherData extends Document {
   gas5: number;
   gas6: number;
   timestamp: Date;
+  deviceId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IWeatherDataRange extends Document {
+  id: string;
+  temperatureMin: number;
+  temperatureMax: number;
+  humidityMin: number;
+  humidityMax: number;
+  pressureMin: number;
+  pressureMax: number;
+  co2Min: number;
+  co2Max: number;
+  vocsMin: number;
+  vocsMax: number;
+  lightMin: number;
+  lightMax: number;
+  noiseMin: number;
+  noiseMax: number;
+  pm1Min: number;
+  pm1Max: number;
+  pm25Min: number;
+  pm25Max: number;
+  pm4Min: number;
+  pm4Max: number;
+  pm10Min: number;
+  pm10Max: number;
+  aiqMin: number;
+  aiqMax: number;
+  gas1Min: number;
+  gas1Max: number;
+  gas2Min: number;
+  gas2Max: number;
+  gas3Min: number;
+  gas3Max: number;
+  gas4Min: number;
+  gas4Max: number;
+  gas5Min: number;
+  gas5Max: number;
+  gas6Min: number;
+  gas6Max: number;
   deviceId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -54,15 +97,21 @@ export interface IUser extends Document {
 }
 
 export interface IGasMapping extends Document {
-    gas1:string;
-    gas2:string;
-    gas3:string;
-    gas4:string;
-    gas5:string;
-    gas6:string;
-    clientId: string;
+  gas1: string;
+  gas2: string;
+  gas3: string;
+  gas4: string;
+  gas5: string;
+  gas6: string;
+  clientId: string;
 }
 
+export interface ISession extends Document {
+  id: string;
+  userId: string;
+  jwt: string;
+  isValid: boolean;
+}
 export interface IClient extends Document {
   id: string;
   name: string;
@@ -70,6 +119,9 @@ export interface IClient extends Document {
   address: string;
   email: string;
   phone: string;
+  showBanner: boolean;
+  bannerLink: string;
+  bannerMessage: string;
   website: string;
   createdAt: Date;
   updatedAt: Date;
@@ -102,4 +154,11 @@ export interface IDevice extends Document {
   clientId: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface INotification extends Document {
+  id: string;
+  userId: string;
+  notification: string;
+  createdAt: Date;
 }
