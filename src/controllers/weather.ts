@@ -55,7 +55,7 @@ export const getData = async (
     ).lean();
 
     const dataToSend = allData.map((d) => ({
-      [metric]: parseFloat((d as any)[metric]?.toFixed(2)),
+      [metric]: parseFloat(d[metric as keyof IWeatherData]?.toFixed(2)),
       dateString: `${d.timestamp.toDateString()} ${d.timestamp.toTimeString().split(" ")[0]}`,
     }));
 
