@@ -1,8 +1,14 @@
 import bcrypt from "bcryptjs";
-import { User, UserDeviceMapping } from "db/mongodb";
+import {
+  SessionMapping,
+  User,
+  UserDeviceMapping,
+  WeatherData,
+  WeatherDataRange,
+} from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import { JwtUserPayload } from "types/jwtPayload";
-import { IUser, ERole } from "types/mongodb";
+import { IUser, ERole, IWeatherDataRange } from "types/mongodb";
 import {
   createAccessToken,
   createPasswordResetToken,
@@ -122,7 +128,7 @@ export const generateCredentials = async (
     let html = readFileSync(
       `${emailTemplatesFolder}/credentials-generated.html`
     ).toString();
-    const url  = `https://sensormagics.com/login/${existingUser.email}/${password}`
+    const url = `https://sensormagics.com/login?id=${existingUser.email}&key=${password}`;
     html = html.replace("#email#", existingUser.email);
     html = html.replace("#name#", existingUser.name);
     html = html.replace("#password#", password);
@@ -193,6 +199,89 @@ export const getAllUsers = async (
       password: 0,
     }).lean();
     return res.customSuccess(200, "Users Fetched Successfully.", users);
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};
+
+export const getDeviceRange = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const deviceRange = await WeatherDataRange.find({
+      deviceId: req.params.id,
+    });
+    return res.customSuccess(
+      200,
+      "Device Range Fetched Successfully",
+      deviceRange
+    );
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};
+
+export const updateDeviceRange = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const updatedValue = req.body;
+
+    const deviceRange = await WeatherDataRange.updateMany(
+      {
+        deviceId: updatedValue.deviceId,
+      },
+      {
+        temperatureMin: updatedValue.temperatureMin,
+        temperatureMax: updatedValue.temperatureMax,
+        humidityMin: updatedValue.humidityMin,
+        humidityMax: updatedValue.humidityMax,
+        pressureMin: updatedValue.pressureMin,
+        pressureMax: updatedValue.pressureMax,
+        co2Min: updatedValue.co2Min,
+        co2Max: updatedValue.co2Max,
+        vocsMin: updatedValue.vocsMin,
+        vocsMax: updatedValue.vocsMax,
+        lightMin: updatedValue.lightMin,
+        lightMax: updatedValue.lightMax,
+        noiseMin: updatedValue.noiseMin,
+        noiseMax: updatedValue.noiseMax,
+        pm1Min: updatedValue.pm1Min,
+        pm1Max: updatedValue.pm1Max,
+        pm25Min: updatedValue.pm25Min,
+        pm25Max: updatedValue.pm25Max,
+        pm4Min: updatedValue.pm4Min,
+        pm4Max: updatedValue.pm4Max,
+        pm10Min: updatedValue.pm10Min,
+        pm10Max: updatedValue.pm10Max,
+        aiqMin: updatedValue.aiqMin,
+        aiqMax: updatedValue.aiqMax,
+        gas1Min: updatedValue.gas1Min,
+        gas1Max: updatedValue.gas1Max,
+        gas2Min: updatedValue.gas2Min,
+        gas2Max: updatedValue.gas2Max,
+        gas3Min: updatedValue.gas3Min,
+        gas3Max: updatedValue.gas3Max,
+        gas4Min: updatedValue.gas4Min,
+        gas4Max: updatedValue.gas4Max,
+        gas5Min: updatedValue.gas5Min,
+        gas5Max: updatedValue.gas5Max,
+        gas6Min: updatedValue.gas6Min,
+        gas6Max: updatedValue.gas6Max,
+        deviceId: updatedValue.deviceId,
+      }
+    );
+    return res.customSuccess(
+      200,
+      "Device Range Fetched Successfully",
+      deviceRange
+    );
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
@@ -299,6 +388,12 @@ export const login = async (
     };
     try {
       const token = createAccessToken(jwtPayload);
+      await SessionMapping.create({
+        id: ulid(),
+        userId: user.id,
+        jwt: token,
+        isValid: true,
+      });
       const loginResponse = { id: jwtPayload.id, token: `Bearer ${token}` };
       return res.customSuccess(200, "Logged in successfully", loginResponse);
     } catch (err) {
@@ -428,6 +523,61 @@ export const changePassword = async (
   }
 };
 
+export const logoutFromAllDevices = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req?.user?.id;
+  if (!userId) {
+    const customError = new CustomError(500, "General", "User not found!", [
+      "User not found!",
+    ]);
+    return next(customError);
+  }
+  logger.info(
+    `User with user id ${userId} is trying to logoput device from all devices`
+  );
+  try {
+    const user: IUser | null = await User.findOne({ id: userId });
+    if (!user) {
+      const customError = new CustomError(500, "General", "Not Found", [
+        "User not found!",
+      ]);
+      return next(customError);
+    }
+
+    try {
+      await SessionMapping.updateMany(
+        { userId: user.id },
+        {
+          isValid: false,
+        }
+      );
+      //TODO: mail bhejna hai
+      return res.customSuccess(200, "logged out successfully", "");
+    } catch (error) {
+      const customError = new CustomError(
+        500,
+        "Raw",
+        "could not logout",
+        null,
+        error
+      );
+      return next(customError);
+    }
+  } catch (error) {
+    const customError = new CustomError(
+      500,
+      "Raw",
+      "could not logout",
+      null,
+      error
+    );
+    return next(customError);
+  }
+};
+
 export const resetPassword = async (
   req: Request,
   res: Response,
@@ -513,6 +663,12 @@ export const forgotPassword = async (
         email: user.email,
         id: user.id,
         role: user.role,
+      });
+      await SessionMapping.create({
+        id: ulid(),
+        userId: user.id,
+        jwt: token,
+        isValid: true,
       });
       const employeeResetPasswordLink = `${process.env.APP_URL}/changePassword?token=${token}`;
       let html = fs

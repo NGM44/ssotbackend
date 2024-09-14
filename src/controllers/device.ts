@@ -1,6 +1,12 @@
-import { Client, Device,GasMapping,UserDeviceMapping } from "db/mongodb";
+import {
+  Client,
+  Device,
+  GasMapping,
+  UserDeviceMapping,
+  WeatherDataRange,
+} from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { EStatus, IClient, IGasMappingDto} from "types/mongodb";
+import { EStatus, IClient, IGasMappingDto } from "types/mongodb";
 import { ulid } from "ulid";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
@@ -20,14 +26,55 @@ export const registerDevice = async (
       );
       return next(customError);
     }
+    const deviceId = ulid();
     const device = await Device.create({
-      id: ulid(),
+      id: deviceId,
       modelType,
       identifier,
       location: location || "",
       name: name || identifier,
       clientId: null,
       status: EStatus.REGISTERED,
+    });
+    await WeatherDataRange.create({
+      id: ulid(),
+      temperatureMin: 0,
+      temperatureMax: 100,
+      humidityMin: 0,
+      humidityMax: 100,
+      pressureMin: 0,
+      pressureMax: 100,
+      co2Min: 0,
+      co2Max: 100,
+      vocsMin: 0,
+      vocsMax: 100,
+      lightMin: 0,
+      lightMax: 100,
+      noiseMin: 0,
+      noiseMax: 100,
+      pm1Min: 0,
+      pm1Max: 100,
+      pm25Min: 0,
+      pm25Max: 100,
+      pm4Min: 0,
+      pm4Max: 100,
+      pm10Min: 0,
+      pm10Max: 100,
+      aiqMin: 0,
+      aiqMax: 100,
+      gas1Min: 0,
+      gas1Max: 100,
+      gas2Min: 0,
+      gas2Max: 100,
+      gas3Min: 0,
+      gas3Max: 100,
+      gas4Min: 0,
+      gas4Max: 100,
+      gas5Min: 0,
+      gas5Max: 100,
+      gas6Min: 0,
+      gas6Max: 100,
+      deviceId: deviceId,
     });
     return res.customSuccess(200, "Device Registered successfully", device.id);
   } catch (err) {
@@ -98,7 +145,7 @@ export const connectDeviceWithClient = async (
     }
     await Device.updateOne(
       { id: deviceId },
-      { status: EStatus.CONNECTED, name, modelType, clientId , location }
+      { status: EStatus.CONNECTED, name, modelType, clientId, location }
     );
     return res.customSuccess(200, "Device connected successfully");
   } catch (err) {
@@ -186,7 +233,7 @@ export const getUserDevices = async (
     const client: IClient | null = await Client.findOne({
       id: user.clientId,
     }).lean();
-    
+
     const devicesToBeSent = devices.map((device) => ({
       id: device.id,
       clientId: device.clientId,
@@ -208,7 +255,9 @@ export const getUserDevices = async (
         devices: devicesToBeSent,
       });
     }
-    const gasMapping: IGasMappingDto | null = await GasMapping.findOne({clientId: client.id});
+    const gasMapping: IGasMappingDto | null = await GasMapping.findOne({
+      clientId: client.id,
+    });
     return res.customSuccess(200, "Devices Fetched Successfully.", {
       email: user.email,
       id: user.id,
@@ -222,10 +271,13 @@ export const getUserDevices = async (
         email: client.email,
         phone: client.phone,
         website: client.website,
+        showBanner: client.showBanner,
+        bannerLink: client.bannerLink,
+        bannerMessage: client.bannerMessage,
       },
       role: user.role,
       devices: devicesToBeSent,
-      gasMapping
+      gasMapping,
     });
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
