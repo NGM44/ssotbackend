@@ -23,7 +23,7 @@ export const consumeWeatherData = async () => {
       console.log(`[x] Received data from device ${deviceId}:`, weatherData);
       const data = {
         id: ulid(),
-        timestamp: new Date(),
+        timestamp: weatherData.dateString ? new Date(weatherData.dateString): new Date(),
         temperature: weatherData.temperature,
         humidity: weatherData.humidity,
         deviceId,
