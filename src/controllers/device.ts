@@ -284,3 +284,91 @@ export const getUserDevices = async (
     return next(customError);
   }
 };
+
+export const getDeviceRange = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const deviceId = req.query.id;
+  if(!deviceId){
+    const error = new CustomError(404,"General","Device not found");
+    return next(error);
+  }
+  try {
+    const deviceRange = await WeatherDataRange.findOne({
+      deviceId: deviceId
+    });
+    return res.customSuccess(
+      200,
+      "Device Range Fetched Successfully",
+      deviceRange
+    );
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};
+
+export const updateDeviceRange = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const updatedValue = req.body;
+
+    const deviceRange = await WeatherDataRange.updateMany(
+      {
+        deviceId: updatedValue.deviceId,
+      },
+      {
+        temperatureMin: updatedValue.temperatureMin,
+        temperatureMax: updatedValue.temperatureMax,
+        humidityMin: updatedValue.humidityMin,
+        humidityMax: updatedValue.humidityMax,
+        pressureMin: updatedValue.pressureMin,
+        pressureMax: updatedValue.pressureMax,
+        co2Min: updatedValue.co2Min,
+        co2Max: updatedValue.co2Max,
+        vocsMin: updatedValue.vocsMin,
+        vocsMax: updatedValue.vocsMax,
+        lightMin: updatedValue.lightMin,
+        lightMax: updatedValue.lightMax,
+        noiseMin: updatedValue.noiseMin,
+        noiseMax: updatedValue.noiseMax,
+        pm1Min: updatedValue.pm1Min,
+        pm1Max: updatedValue.pm1Max,
+        pm25Min: updatedValue.pm25Min,
+        pm25Max: updatedValue.pm25Max,
+        pm4Min: updatedValue.pm4Min,
+        pm4Max: updatedValue.pm4Max,
+        pm10Min: updatedValue.pm10Min,
+        pm10Max: updatedValue.pm10Max,
+        aiqMin: updatedValue.aiqMin,
+        aiqMax: updatedValue.aiqMax,
+        gas1Min: updatedValue.gas1Min,
+        gas1Max: updatedValue.gas1Max,
+        gas2Min: updatedValue.gas2Min,
+        gas2Max: updatedValue.gas2Max,
+        gas3Min: updatedValue.gas3Min,
+        gas3Max: updatedValue.gas3Max,
+        gas4Min: updatedValue.gas4Min,
+        gas4Max: updatedValue.gas4Max,
+        gas5Min: updatedValue.gas5Min,
+        gas5Max: updatedValue.gas5Max,
+        gas6Min: updatedValue.gas6Min,
+        gas6Max: updatedValue.gas6Max,
+        deviceId: updatedValue.deviceId,
+      }
+    );
+    return res.customSuccess(
+      200,
+      "Device Range Fetched Successfully",
+      deviceRange
+    );
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};

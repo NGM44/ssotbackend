@@ -26,6 +26,12 @@ export interface IWeatherData extends Document {
   updatedAt: Date;
 }
 
+export interface IPreference extends Document {
+  id: string;
+  userId: string;
+  preference: string;
+}
+
 export interface IWeatherDataRange extends Document {
   id: string;
   temperatureMin: number;
