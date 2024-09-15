@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
 import {
+  Notification,
+  Preference,
   SessionMapping,
   User,
   UserDeviceMapping,
@@ -52,6 +54,7 @@ export const signUp = async (
       role: ERole.USER,
     };
     await User.create(data);
+
     return res.customSuccess(200, "User successfully created.");
   } catch (err) {
     const customError = new CustomError(
@@ -205,83 +208,123 @@ export const getAllUsers = async (
   }
 };
 
-export const getDeviceRange = async (
+export const getUserNotification = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  const userId = req?.user?.id ?? "";
+  if (!userId) {
+    const customError = new CustomError(404, "General", "User not found");
+    return next(customError);
+  }
   try {
-    const deviceRange = await WeatherDataRange.find({
-      deviceId: req.params.id,
-    });
-    return res.customSuccess(
-      200,
-      "Device Range Fetched Successfully",
-      deviceRange
-    );
+    const notification = await Notification.findOne({ userId: userId });
+    return res.customSuccess(200, "Notification Fetched", notification);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
   }
 };
 
-export const updateDeviceRange = async (
+export const updateUserNotification = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  const data = req.body;
+  if (!data.email) {
+    const customError = new CustomError(404, "General", "Email not found");
+    return next(customError);
+  }
+  if (!data.message) {
+    const customError = new CustomError(
+      404,
+      "General",
+      "Empty Message Not Allowed"
+    );
+    return next(customError);
+  }
   try {
-    const updatedValue = req.body;
+    const user = await User.findOne({ email: data.email });
+    if (!user) {
+      const customError = new CustomError(404, "General", "User not found");
+      return next(customError);
+    }
+    const notiifcation = await Notification.create({
+      userId: user.id,
+      id: ulid(),
+      notification: data.message,
+    });
+    if (data.includeMail) {
+      //send email
+    }
+    return res.customSuccess(200, "Notification Sent", notiifcation);
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};
 
-    const deviceRange = await WeatherDataRange.updateMany(
+export const getPreference = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    const customError = new CustomError(404, "General", "Userid not found");
+    return next(customError);
+  }
+  try {
+    const preference = await Preference.findOne({ userId: userId });
+    let structuredData = JSON.parse(preference?.preference ?? "");
+    return res.customSuccess(200, "User Preference Fetched", {
+      id: preference?.id,
+      preference: structuredData,
+      userId: preference?.userId,
+    });
+  } catch (err) {
+    const customError = new CustomError(500, "Raw", "Error", null, err);
+    return next(customError);
+  }
+};
+
+export const updatePreference = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.user?.id;
+  const data = req.body;
+  if (!userId) {
+    const customError = new CustomError(404, "General", "Userid not found");
+    return next(customError);
+  }
+  try {
+    if (data.length > 6) {
+      const customError = new CustomError(
+        404,
+        "General",
+        "Preference Limit is 6"
+      );
+      return next(customError);
+    }
+    const preferenceList = JSON.stringify(data.preference);
+    const preference = await Preference.findOneAndUpdate(
+      { userId: userId },
       {
-        deviceId: updatedValue.deviceId,
-      },
-      {
-        temperatureMin: updatedValue.temperatureMin,
-        temperatureMax: updatedValue.temperatureMax,
-        humidityMin: updatedValue.humidityMin,
-        humidityMax: updatedValue.humidityMax,
-        pressureMin: updatedValue.pressureMin,
-        pressureMax: updatedValue.pressureMax,
-        co2Min: updatedValue.co2Min,
-        co2Max: updatedValue.co2Max,
-        vocsMin: updatedValue.vocsMin,
-        vocsMax: updatedValue.vocsMax,
-        lightMin: updatedValue.lightMin,
-        lightMax: updatedValue.lightMax,
-        noiseMin: updatedValue.noiseMin,
-        noiseMax: updatedValue.noiseMax,
-        pm1Min: updatedValue.pm1Min,
-        pm1Max: updatedValue.pm1Max,
-        pm25Min: updatedValue.pm25Min,
-        pm25Max: updatedValue.pm25Max,
-        pm4Min: updatedValue.pm4Min,
-        pm4Max: updatedValue.pm4Max,
-        pm10Min: updatedValue.pm10Min,
-        pm10Max: updatedValue.pm10Max,
-        aiqMin: updatedValue.aiqMin,
-        aiqMax: updatedValue.aiqMax,
-        gas1Min: updatedValue.gas1Min,
-        gas1Max: updatedValue.gas1Max,
-        gas2Min: updatedValue.gas2Min,
-        gas2Max: updatedValue.gas2Max,
-        gas3Min: updatedValue.gas3Min,
-        gas3Max: updatedValue.gas3Max,
-        gas4Min: updatedValue.gas4Min,
-        gas4Max: updatedValue.gas4Max,
-        gas5Min: updatedValue.gas5Min,
-        gas5Max: updatedValue.gas5Max,
-        gas6Min: updatedValue.gas6Min,
-        gas6Max: updatedValue.gas6Max,
-        deviceId: updatedValue.deviceId,
+        preference: preferenceList,
       }
     );
-    return res.customSuccess(
-      200,
-      "Device Range Fetched Successfully",
-      deviceRange
-    );
+    if (!preference) {
+      await Preference.create({
+        id: ulid(),
+        userId: userId,
+        preference: preferenceList,
+      });
+    }
+    return res.customSuccess(200, "User Preference Fetched", preference);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);

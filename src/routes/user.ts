@@ -7,13 +7,15 @@ import {
   forgotPassword,
   generateCredentials,
   getAllUsers,
-  getDeviceRange,
+  getPreference,
+  getUserNotification,
   login,
   logoutFromAllDevices,
   resetPassword,
   signUp,
-  updateDeviceRange,
+  updatePreference,
   updateUserDetail,
+  updateUserNotification,
 } from "controllers/user";
 import { Router } from "express";
 import { checkJwt } from "utils/createJwtToken";
@@ -25,9 +27,12 @@ router.post("/adminSignUp", adminSignUp);
 router.post("/generateCredentials", checkJwt, generateCredentials);
 router.delete("/:id", checkJwt, deleteUser);
 router.get("/all", checkJwt, getAllUsers);
-router.get("/range", checkJwt, getDeviceRange);
-router.put("/range", checkJwt, updateDeviceRange);
+router.put("/preference", checkJwt, updatePreference);
+router.get("/preference", checkJwt, getPreference);
+router.post("/message", checkJwt, updateUserNotification);
+router.get("/message", checkJwt, getUserNotification);
 router.get("/deactive", checkJwt, deactiveUser);
+
 router.post("/login", login);
 router.post("/changePassword", checkJwt, changePassword);
 router.post("/changeNewPassword", checkJwt, changeNewPassword);

@@ -10,6 +10,7 @@ import {
   ISession,
   INotification,
   IWeatherDataRange,
+  IPreference,
 } from "types/mongodb";
 import { ulid } from "ulid";
 
@@ -85,6 +86,15 @@ const sessionSchema = new Schema({
   userId: { type: String, ref: "User", required: true },
   jwt: { type: String, required: true },
   isValid: { type: Boolean, default: true },
+});
+
+const userPreferenceSchema = new Schema({
+  id: { type: String, required: true, unique: true },
+  userId: { type: String, ref: "User", required: true },
+  preference: {
+    type: String,
+    required: true,
+  },
 });
 
 const notificationSchema = new Schema({
@@ -231,6 +241,11 @@ const Notification = mongoose.model<INotification>(
   notificationSchema
 );
 
+const Preference = mongoose.model<IPreference>(
+  "Preference",
+  userPreferenceSchema
+);
+
 export {
   Client,
   Device,
@@ -241,4 +256,5 @@ export {
   SessionMapping,
   Notification,
   WeatherDataRange,
+  Preference,
 };
