@@ -1,7 +1,7 @@
-import { Device, SessionMapping, User } from "db/mongodb";
+import { SessionMapping, User } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { IDevice, IUser } from "types/mongodb";
+import { IUser } from "types/mongodb";
 import { JwtDevicePayload, JwtUserPayload } from "../types/jwtPayload";
 import { CustomError } from "./response/custom-error/CustomError";
 
@@ -94,7 +94,7 @@ export const checkJwt = async (
   return next();
 };
 
-export const checkDeviceJwt = async (
+export const checkAdminJwt = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -112,23 +112,50 @@ export const checkDeviceJwt = async (
   try {
     const jwtPayload = jwt.verify(
       token,
-      process.env.JWT_DEVICE_SECRET_KEY as string
-    ) as JwtDevicePayload;
+      process.env.JWT_USER_SECRET_KEY as string
+    ) as JwtUserPayload;
     req.jwtPayload = jwtPayload;
-    const device: IDevice | null = await Device.findOne({
+    //TODO:will comment off once all changes are done
+    // if(jwtPayload.role !== ERole.ADMIN){
+    //   const customError = new CustomError(
+    //     401,
+    //     "Raw",
+    //     "JWT error",
+    //     null,
+    //     "No User with the ID found"
+    //   );
+    //   return next(customError);
+    // }
+    const userDetails: IUser | null = await User.findOne({
       id: jwtPayload.id,
     });
-    if (!device) {
+
+    if (!userDetails) {
       const customError = new CustomError(
         401,
         "Raw",
         "JWT error",
         null,
-        "No Device with the ID found"
+        "No User with the ID found"
       );
       return next(customError);
     } else {
-      req.device = device;
+      req.user = userDetails;
+    }
+    const sessions = await SessionMapping.find({
+      userId: userDetails.id,
+      isValid: true
+    });
+    const sessionToken = sessions.map((session) => session.jwt);
+    if (!sessionToken.includes(token)) {
+      const customError = new CustomError(
+        401,
+        "Raw",
+        "JWT error",
+        null,
+        "Please login again"
+      );
+      return next(customError);
     }
   } catch (err) {
     const customError = new CustomError(401, "Raw", "JWT error", null, err);

@@ -121,7 +121,7 @@ export interface ISession extends Document {
 export interface IClient extends Document {
   id: string;
   name: string;
-  logo: string;
+  logo: Buffer;
   address: string;
   email: string;
   phone: string;
@@ -133,8 +133,9 @@ export interface IClient extends Document {
   updatedAt: Date;
 }
 
-export interface IClientDto extends Omit<IClient, keyof Document> {
+export interface IClientDto extends Omit<Omit<IClient, keyof Document>,"logo"> {
   id: string;
+  logo?: string;
   users: IUserDto[];
   devices: IDeviceDto[];
   gasMapping?: IGasMappingDto;

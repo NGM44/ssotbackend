@@ -18,20 +18,20 @@ import {
   updateUserNotification,
 } from "controllers/user";
 import { Router } from "express";
-import { checkJwt } from "utils/createJwtToken";
+import { checkAdminJwt, checkJwt } from "utils/createJwtToken";
 
 const router = Router();
 
-router.post("/signUp", signUp);
+router.post("/signUp", checkAdminJwt, signUp);
 router.post("/adminSignUp", adminSignUp);
-router.post("/generateCredentials", checkJwt, generateCredentials);
-router.delete("/:id", checkJwt, deleteUser);
-router.get("/all", checkJwt, getAllUsers);
+router.post("/generateCredentials", checkAdminJwt, generateCredentials);
+router.delete("/:id", checkAdminJwt, deleteUser);
+router.get("/all", checkAdminJwt, getAllUsers);
 router.put("/preference", checkJwt, updatePreference);
 router.get("/preference", checkJwt, getPreference);
-router.post("/message", checkJwt, updateUserNotification);
+router.post("/message", checkAdminJwt, updateUserNotification);
 router.get("/message", checkJwt, getUserNotification);
-router.get("/deactive", checkJwt, deactiveUser);
+router.get("/deactive", checkAdminJwt, deactiveUser);
 
 router.post("/login", login);
 router.post("/changePassword", checkJwt, changePassword);

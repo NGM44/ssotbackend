@@ -9,13 +9,13 @@ import {
   updateStatus,
 } from "controllers/device";
 import { Router } from "express";
-import { checkJwt } from "utils/createJwtToken";
+import { checkAdminJwt, checkJwt } from "utils/createJwtToken";
 
 const router = Router();
 
-router.post("/register", register);
-router.post("/connectDeviceWithUser", checkJwt, connectDeviceWithUser);
-router.post("/connectDeviceWithClient", checkJwt, connectDeviceWithClient);
+router.post("/register", checkAdminJwt, register);
+router.post("/connectDeviceWithUser", checkAdminJwt, connectDeviceWithUser);
+router.post("/connectDeviceWithClient", checkAdminJwt, connectDeviceWithClient);
 router.put("/updateStatus", updateStatus);
 router.get("/range", checkJwt, getDeviceRange);
 router.put("/range", checkJwt, updateDeviceRange);

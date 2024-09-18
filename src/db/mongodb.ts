@@ -48,7 +48,7 @@ const clientSchema = new Schema(
   {
     id: { type: String, default: ulid(), unique: true, required: true },
     name: { type: String, unique: true },
-    logo: { type: String },
+    logo: { type: Buffer },
     address: { type: String },
     email: { type: String, required: true },
     phone: { type: String },
@@ -106,6 +106,7 @@ const notificationSchema = new Schema({
 
 const gasMappingSchema = new Schema(
   {
+    id: { type: String, required: true, unique: true },
     gas1: { type: String, required: true },
     gas2: { type: String, required: true },
     gas3: { type: String, required: true },

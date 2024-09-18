@@ -219,7 +219,7 @@ export const getUserNotification = async (
     return next(customError);
   }
   try {
-    const notification = await Notification.findOne({ userId: userId });
+    const notification = await Notification.find({ userId }).lean();
     return res.customSuccess(200, "Notification Fetched", notification);
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);

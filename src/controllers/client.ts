@@ -29,10 +29,12 @@ export const createClient = async (
       );
       return next(customError);
     }
+    const base64Data = clientData.logo.replace(/^data:image\/\w+;base64,/, '');
+    const logoBuffer = Buffer.from(base64Data, 'base64');
     const createdClient = await Client.create({
       id: ulid(),
       name: clientData.name,
-      logo: clientData.logo,
+      logo: logoBuffer,
       address: clientData.address,
       email: clientData.email,
       phone: clientData.phone,
@@ -173,7 +175,7 @@ export const getClient = async (
       address: client.address,
       createdAt: client.createdAt,
       email: client.email,
-      logo: client.logo,
+      logo: client.logo.toString("base64"),
       name: client.name,
       phone: client.phone,
       updatedAt: client.updatedAt,
@@ -273,7 +275,7 @@ export const getAllClient = async (
         address: client.address,
         createdAt: client.createdAt,
         email: client.email,
-        logo: client.logo,
+        logo: client.logo.toString("base64"),
         name: client.name,
         phone: client.phone,
         showBanner: client.showBanner,
