@@ -30,7 +30,7 @@ export const createClient = async (
       return next(customError);
     }
     const base64Data = clientData.logo.replace(/^data:(image\/\w+);base64,/, '');
-    const mimeType = clientData.logo.match(/^data:(image\/\w+);base64/)[1] || undefined;
+    const mimeType = clientData.logo ? clientData.logo.match(/^data:(image\/\w+);base64/)[1] : undefined;
     const logoBuffer = Buffer.from(base64Data, 'base64') || undefined;
     const createdClient = await Client.create({
       id: ulid(),
