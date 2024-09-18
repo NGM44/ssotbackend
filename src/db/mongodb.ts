@@ -49,6 +49,7 @@ const clientSchema = new Schema(
     id: { type: String, default: ulid(), unique: true, required: true },
     name: { type: String, unique: true },
     logo: { type: Buffer },
+    logoMimeType: {type:String},  
     address: { type: String },
     email: { type: String, required: true },
     phone: { type: String },

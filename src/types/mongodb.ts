@@ -122,6 +122,7 @@ export interface IClient extends Document {
   id: string;
   name: string;
   logo: Buffer;
+  logoMimeType?: string;
   address: string;
   email: string;
   phone: string;
