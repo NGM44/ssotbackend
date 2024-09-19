@@ -90,6 +90,13 @@ export enum EStatus {
   TERMINATED = "TERMINATED",
 }
 
+export enum EJobStatus {
+  STARTED = "STARTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED"
+}
+
 export interface IUser extends Document {
   id: string;
   name: string;
@@ -132,6 +139,17 @@ export interface IClient extends Document {
   website: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IJob extends Document {
+  id: string;
+  deviceId: string;
+  userId: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  result?: string;
+  note?: string;
 }
 
 export interface IClientDto extends Omit<Omit<IClient, keyof Document>,"logo"> {

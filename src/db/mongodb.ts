@@ -11,6 +11,8 @@ import {
   INotification,
   IWeatherDataRange,
   IPreference,
+  IJob,
+  EJobStatus,
 } from "types/mongodb";
 import { ulid } from "ulid";
 
@@ -26,6 +28,20 @@ const statuses = [
   EStatus.UNREGISTERED,
   EStatus.TERMINATED,
 ];
+const jobStatuses = [EJobStatus.COMPLETED, EJobStatus.STARTED, EJobStatus.FAILED, EJobStatus.IN_PROGRESS];
+
+const jobSchema = new Schema({
+  id: { type: String, default: ulid(), unique: true, required: true },
+  deviceId: { type: String, required: true },
+  userId: {type: String, required: true},
+  status: { type: String, required: true,enum: jobStatuses },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+  result: { type: String },
+  note: {type: String}
+},{
+  timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
+});
 
 const userSchema = new Schema(
   {
@@ -216,6 +232,7 @@ const weatherDataSchema = new Schema(
   }
 );
 const User = mongoose.model<IUser>("User", userSchema);
+const Job = mongoose.model<IJob>("Job", jobSchema);
 const Client = mongoose.model<IClient>("Client", clientSchema);
 const Device = mongoose.model<IDevice>("Device", deviceSchema);
 const UserDeviceMapping = mongoose.model(
@@ -259,4 +276,5 @@ export {
   Notification,
   WeatherDataRange,
   Preference,
+  Job
 };

@@ -1,8 +1,32 @@
-import { WeatherData } from "db/mongodb";
+import { Job, WeatherData } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { IWeatherData } from "types/mongodb";
-import { generateWeatherReport } from "utils/report";
+import { EJobStatus, IWeatherData } from "types/mongodb";
+import { ulid } from "ulid";
+import { AttachmentData, sendEmail } from "utils/email";
 import { CustomError } from "utils/response/custom-error/CustomError";
+import XLSX from 'xlsx';
+
+const metrics: FieldKeys[] = [
+  "timestamp",
+  "temperature",
+  "humidity",
+  "pressure",
+  "co2",
+  "vocs",
+  "light",
+  "noise",
+  "pm1",
+  "pm25",
+  "pm4",
+  "pm10",
+  "aiq",
+  "gas1",
+  "gas2",
+  "gas3",
+  "gas4",
+  "gas5",
+  "gas6"
+];
 
 export const getData = async (
   req: Request,
@@ -184,58 +208,120 @@ export const generateReport = async (
   next: NextFunction,
 ) => {
   try {
+    const userId = req.user?.id;
+    const userEmail = req.user?.email;
     const deviceId = req.body.deviceId;
-    const endDate = new Date(req.body.to);
     const startDate = new Date(req.body.from);
-    const allData = await WeatherData.find(
-      { timestamp: { $gte: startDate, $lte: endDate }, deviceId },
-      {
-        timestamp: 1, temperature: 1, humidity: 1,
-        pressure: 1,
-        co2: 1,
-        vocs: 1,
-        light: 1,
-        noise: 1,
-        pm1: 1,
-        pm25: 1,
-        pm4: 1,
-        pm10: 1,
-        aiq: 1,
-        gas1: 1,
-        gas2: 1,
-        gas3: 1,
-        gas4: 1,
-        gas5: 1,
-        gas6: 1,
-        _id: 0
-      },
-    ).lean();
-    const dataToSend = allData.map((d) => ({
-      temperature: parseFloat(d.temperature.toFixed(2)),
-      humidity: parseFloat(d.humidity.toFixed(2)),
-      pressure: parseFloat(d.pressure.toFixed(2)),
-      co2: parseFloat(d.co2.toFixed(2)),
-      vocs: parseFloat(d.vocs.toFixed(2)),
-      light: parseFloat(d.light.toFixed(2)),
-      noise: parseFloat(d.noise.toFixed(2)),
-      pm1: parseFloat(d.pm1.toFixed(2)),
-      pm25: parseFloat(d.pm25.toFixed(2)),
-      pm4: parseFloat(d.pm4.toFixed(2)),
-      pm10: parseFloat(d.pm10.toFixed(2)),
-      aiq: parseFloat(d.aiq.toFixed(2)),
-      gas1: parseFloat(d.gas1.toFixed(2)),
-      gas2: parseFloat(d.gas2.toFixed(2)),
-      gas3: parseFloat(d.gas3.toFixed(2)),
-      gas4: parseFloat(d.gas4.toFixed(2)),
-      gas5: parseFloat(d.gas5.toFixed(2)),
-      gas6: parseFloat(d.gas6.toFixed(2)),
-      dateString: `${d.timestamp.toDateString()} ${d.timestamp.toTimeString().split(" ")[0]
-        }`,
-    }));
-    const base64File = generateWeatherReport(dataToSend);
-    return res.customSuccess(200, "success", base64File);
+    const endDate = new Date(req.body.to);
+    const jobId = ulid();
+    await Job.create({ id: jobId, deviceId, userId, status: EJobStatus.STARTED });
+    generateAndSendEmail(deviceId, startDate, endDate, jobId, metrics, userEmail);
+    await Job.updateOne({id: jobId}, {status: EJobStatus.IN_PROGRESS, note: `Generating report for ${deviceId} from ${startDate} to ${endDate} and will send email to ${userEmail}`});
+    return res.customSuccess(200, "Generation job started successfully");
   } catch (err) {
     const customError = new CustomError(500, "Raw", "Error", null, err);
     return next(customError);
   }
 };
+
+const fieldMap = {
+  timestamp: "Date",
+  temperature: "Temperature",
+  humidity: "Humidity",
+  pressure: "Pressure",
+  co2: "Carbon-Dioxide",
+  vocs: "VOCs",
+  light: "Light",
+  noise: "Noise",
+  pm1: "PM1",
+  pm25: "PM2.5",
+  pm4: "PM4",
+  pm10: "PM10",
+  aiq: "AIQ",
+  gas1: "Gas-1",
+  gas2: "Gas-2",
+  gas3: "Gas-3",
+  gas4: "Gas-4",
+  gas5: "Gas-5",
+  gas6: "Gas-6"
+};
+
+type FieldKeys = keyof typeof fieldMap;
+
+async function queryWeatherData(deviceId: string, startDate: Date, endDate: Date, fields: FieldKeys[]) {
+  const projection = fields.reduce((acc, field) => {
+    if (fieldMap[field]) {
+      acc[field] = 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+  projection['timestamp'] = 1;
+  const data = await WeatherData.find(
+    { timestamp: { $gte: startDate, $lte: endDate }, deviceId },
+    projection
+  ).lean();
+  return data;
+}
+
+function generateReportExcel(data: IWeatherData[], fields: FieldKeys[]): Buffer {
+  const headers = fields.map(field => fieldMap[field] || field);
+  const sheetData = data.map((row) => {
+    return fields.map(field => {
+      if (field === 'timestamp') {
+        return `${new Date(row[field]).toDateString()} ${new Date(row[field]).toTimeString().split(" ")[0]}`;
+      }else if(field === "temperature"){
+        return parseFloat(row[field].toFixed(2))
+      }
+      return parseFloat(row[field].toFixed(0));
+    });
+  });
+  sheetData.unshift(headers); 
+  const workbook = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+  XLSX.utils.book_append_sheet(workbook, ws, 'Report');
+  return XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+}
+
+
+async function sendReportEmail(email: string, deviceId: string, startDate: Date, endDate: Date, buffer: Buffer) {
+  const base64File = buffer.toString('base64');
+  const attachments: AttachmentData[] = [
+    {
+      content: base64File,
+      disposition: "attachment",
+      filename: `Report of ${deviceId}(${startDate}-${endDate})`,
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    }
+  ];
+  await sendEmail({
+    from: process.env.SENDGRID_FROM!,
+    to: email,
+    html: "Attached is your requested weather report.",
+    subject: `Report of ${deviceId} (${startDate.toDateString()} - ${endDate.toDateString()})`,
+    attachments,
+  });
+}
+
+
+export async function generateAndSendEmail(
+  deviceId: string, 
+  startDate: Date, 
+  endDate: Date, 
+  jobId: string, 
+  fields: FieldKeys[], 
+  email?: string
+) {
+  try {
+    const validFields = fields.filter(field => fieldMap[field]);
+    const allData: IWeatherData[] = await queryWeatherData(deviceId, startDate, endDate, validFields);
+    const reportBuffer = generateReportExcel(allData, validFields);
+    if (email) {
+      await sendReportEmail(email, deviceId, startDate, endDate, reportBuffer);
+      await Job.updateOne({ id: jobId }, { status: EJobStatus.COMPLETED, result: reportBuffer.toString('base64'), note: "Sent email" });
+    } else {
+      await Job.updateOne({ id: jobId }, { status: EJobStatus.COMPLETED, result: reportBuffer.toString('base64'), note: "Did not send email" });
+    }
+  } catch (err) {
+    await Job.updateOne({ id: jobId }, { status: EJobStatus.FAILED, result: err });
+  }
+}
