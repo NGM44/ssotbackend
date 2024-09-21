@@ -48,6 +48,10 @@ export interface IWeatherDataRange extends Document {
   lightMax: number;
   noiseMin: number;
   noiseMax: number;
+  oderMin: number;
+  odorMax: number;
+  moldGrowthMin: number;
+  moldGrowthMax: number;
   pm1Min: number;
   pm1Max: number;
   pm25Min: number;
