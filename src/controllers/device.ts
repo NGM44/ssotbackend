@@ -75,6 +75,8 @@ export const registerDevice = async (
       gas6Min: 0,
       gas6Max: 100,
       deviceId: deviceId,
+      oderMin: 0,
+      odorMax: 100
     });
     return res.customSuccess(200, "Device Registered successfully", device.id);
   } catch (err) {
