@@ -6,7 +6,8 @@ import {
   WeatherDataRange,
 } from "db/mongodb";
 import { NextFunction, Request, Response } from "express";
-import { EStatus, IClient, IGasMappingDto } from "types/mongodb";
+import { ModifiedPathsSnapshot, Document, Model, Types, ClientSession, DocumentSetOptions, QueryOptions, UpdateQuery, AnyObject, PopulateOptions, MergeType, Query, SaveOptions, ToObjectOptions, FlattenMaps, Require_id, UpdateWithAggregationPipeline, pathsToSkip, Error } from "mongoose";
+import { EStatus, IClient, IGasMappingDto, IWeatherDataRange } from "types/mongodb";
 import { ulid } from "ulid";
 import { CustomError } from "utils/response/custom-error/CustomError";
 
@@ -36,7 +37,7 @@ export const registerDevice = async (
       clientId: null,
       status: EStatus.REGISTERED,
     });
-    await WeatherDataRange.create({
+    await WeatherDataRange.create( {
       id: ulid(),
       temperatureMin: 0,
       temperatureMax: 100,
@@ -76,7 +77,9 @@ export const registerDevice = async (
       gas6Max: 100,
       deviceId: deviceId,
       oderMin: 0,
-      odorMax: 100
+      odorMax: 100,
+      moldGrowthMin: 0,
+      moldGrowthMax: 100,
     });
     return res.customSuccess(200, "Device Registered successfully", device.id);
   } catch (err) {
