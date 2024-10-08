@@ -68,6 +68,40 @@ export const createClient = async (
   }
 };
 
+export const updateClient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => { 
+  try {
+    const clientId = req.body.id;
+    const clientData = req.body;
+    const base64Data = clientData.logo.replace(/^data:(image\/\w+);base64,/, '');
+    const mimeType = clientData.logo ? clientData.logo.match(/^data:(image\/\w+);base64/)[1] : undefined;
+    const logoBuffer = clientData.logo ?  Buffer.from(base64Data, 'base64') : undefined;
+    await Client.updateOne(
+      { id: clientId },
+      {name: clientData.name,
+        logo: logoBuffer,
+        logoMimeType: mimeType,
+        address: clientData.address,
+        email: clientData.email,
+        phone: clientData.phone,
+        website: clientData.website }
+    );
+    return res.customSuccess(200, "Client Updated successfully");
+  } catch (err) {
+    const customError = new CustomError(
+      400,
+      "Raw",
+      "Cannot update client",
+      null,
+      err
+    );
+    return next(customError);
+  }
+}
+
 export const updateGasMapping = async (
   req: Request,
   res: Response,

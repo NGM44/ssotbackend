@@ -8,6 +8,7 @@ import { errorHandler } from "utils/errorHandler";
 import "./utils/response/customSuccess";
 import logger from "utils/logger";
 import { consumeWeatherData } from "mqttserver";
+import bodyParser from 'body-parser';
 /* eslint-disable no-console */
 
 dotenv.config();
@@ -32,6 +33,8 @@ axios.interceptors.response.use((response) => {
 });
 app.use(cors({ origin: "*" }));
 app.use(express.json());
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 mongoose
   .connect(process.env.MONGO_DB_URL || "", {
     dbName: process.env.MONGO_DB_NAME || "vayuguna",
