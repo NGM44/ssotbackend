@@ -1,17 +1,18 @@
 import { WeatherData } from "db/mongodb";
 import mqtt from "mqtt";
 import { ulid } from "ulid";
+import logger from "utils/logger";
 
 export const consumeWeatherData = async () => {
   const mqttUrl = process.env.MQTTURL!;
   const client = mqtt.connect(mqttUrl);
   client.on('connect', () => {
-    console.log('Connected to MQTT broker from consumer side');
+    logger.info('Connected to MQTT broker from consumer side');
     client.subscribe('weather_data/#', (err) => {
       if (err) {
-        console.error('Failed to subscribe:', err);
+        logger.error('Failed to subscribe:', err);
       } else {
-        console.log('Subscribed to weather_data/#');
+        logger.info('Subscribed to weather_data/#');
       }
     });
   });
@@ -20,7 +21,7 @@ export const consumeWeatherData = async () => {
       if (topic.startsWith('weather_data/')) {
       const deviceId = topic.split("/")[1];
       const weatherData = JSON.parse(message.toString());
-      console.log(`[x] Received data from device ${deviceId}:`, weatherData);
+      logger.info(`[x] Received data from device ${deviceId}:`, weatherData);
       const data = {
         id: ulid(),
         timestamp: weatherData.dateString ? new Date(weatherData.dateString): new Date(),
@@ -46,10 +47,10 @@ export const consumeWeatherData = async () => {
       };
       await WeatherData.create(data);
     } }catch (err) {
-      console.error('Error processing message:', err);
+      logger.error('Error processing message:', err);
     }
   });
   client.on('error', (err) => {
-    console.error('MQTT Error from consumer side:', err);
+    logger.error('MQTT Error from consumer side:', err);
   });
 };

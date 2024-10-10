@@ -193,7 +193,6 @@ export const createDataFromPostman = async (
       });
       currentDate.setSeconds(currentDate.getSeconds() + 60);
     }
-    console.log("Creating data");
     await WeatherData.insertMany(data);
     return res.customSuccess(200, "Created Successfully");
   } catch (err) {
