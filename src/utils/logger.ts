@@ -12,7 +12,7 @@ export const getTempDirForLogs = () => {
   } else if (opsys === "linux" || opsys === "darwin") {
     tmpDir = "/tmp/nodelogs/";
   }
-  logger.info(`Using ${tmpDir} for Logging`);
+  console.log(`Using ${tmpDir} for Logging`);
   return tmpDir;
 };
 const logDirectory = getTempDirForLogs();
