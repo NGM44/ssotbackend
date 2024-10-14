@@ -78,10 +78,16 @@ export const getData = async (
       projection,
     ).lean();
 
-    const dataToSend = allData.map((d) => ({
-      [metric]: parseFloat((d as any)[metric]?.toFixed(2)),
-      dateString: d.timestamp.toLocaleString("en-IN"),
-    }));
+    const dataToSend = allData.map((d) => {
+      const dateInUTC = new Date(d.timestamp);
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const dateInIST = new Date(dateInUTC.getTime() + istOffset);
+      const dateString = `${dateInIST.toDateString()} ${dateInIST.toTimeString().split(" ")[0]}`;
+      return {
+        [metric]: parseFloat((d as any)[metric]?.toFixed(2)),
+        dateString,
+      };
+    });
 
     return res.customSuccess(200, "Fetched Successfully", dataToSend);
   } catch (err) {
@@ -126,8 +132,7 @@ export const getLatestData = async (
     )
       .sort({ timestamp: -1 })
       .lean();
-
-    // Format the latest data
+      const istOffset = 5.5 * 60 * 60 * 1000;
     const dataToSend =  latestData && {
       temperature: parseFloat(latestData.temperature.toFixed(2)),
       humidity: parseFloat(latestData.humidity.toFixed(2)),
@@ -147,7 +152,7 @@ export const getLatestData = async (
       gas4: parseFloat(latestData.gas4.toFixed(2)),
       gas5: parseFloat(latestData.gas5.toFixed(2)),
       gas6: parseFloat(latestData.gas6.toFixed(2)),
-      dateString: latestData.timestamp.toLocaleString("en-IN"),
+      dateString:`${new Date(latestData.timestamp.getTime()+istOffset).toDateString()} ${new Date(latestData.timestamp.getTime()+istOffset).toTimeString().split(" ")[0]}`,
     };
 
     return res.customSuccess(200, "Fetched Successfully", dataToSend);
