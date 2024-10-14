@@ -22,9 +22,13 @@ export const consumeWeatherData = async () => {
       const deviceId = topic.split("/")[1];
       const weatherData = JSON.parse(message.toString());
       logger.info(`[x] Received data from device ${deviceId}:`, weatherData);
+      const now = new Date();
+      const updatedDate = new Date(now); 
+      updatedDate.setHours(updatedDate.getHours() + 5);
+      updatedDate.setMinutes(updatedDate.getMinutes() + 30);
       const data = {
         id: ulid(),
-        timestamp: weatherData.dateString ? new Date(weatherData.dateString): new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+        timestamp: weatherData.dateString ? new Date(weatherData.dateString): updatedDate,
         temperature: weatherData.temperature,
         humidity: weatherData.humidity,
         deviceId,
