@@ -45,7 +45,7 @@ export const consumeWeatherData = async () => {
         gas5: weatherData.gas5,
         gas6: weatherData.gas6,
       };
-      await WeatherData.create(data);
+      // await WeatherData.create(data);
     } }catch (err) {
       logger.error('Error processing message:', err);
     }
