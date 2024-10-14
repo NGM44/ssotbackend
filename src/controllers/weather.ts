@@ -80,7 +80,7 @@ export const getData = async (
 
     const dataToSend = allData.map((d) => ({
       [metric]: parseFloat((d as any)[metric]?.toFixed(2)),
-      dateString: d.timestamp,
+      dateString: d.timestamp.toLocaleString("en-IN"),
     }));
 
     return res.customSuccess(200, "Fetched Successfully", dataToSend);
@@ -147,7 +147,7 @@ export const getLatestData = async (
       gas4: parseFloat(latestData.gas4.toFixed(2)),
       gas5: parseFloat(latestData.gas5.toFixed(2)),
       gas6: parseFloat(latestData.gas6.toFixed(2)),
-      dateString: latestData.timestamp,
+      dateString: latestData.timestamp.toLocaleString("en-IN"),
     };
 
     return res.customSuccess(200, "Fetched Successfully", dataToSend);
