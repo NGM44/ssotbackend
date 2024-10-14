@@ -24,7 +24,7 @@ export const consumeWeatherData = async () => {
       logger.info(`[x] Received data from device ${deviceId}:`, weatherData);
       const data = {
         id: ulid(),
-        timestamp: weatherData.dateString ? new Date(weatherData.dateString): new Date(),
+        timestamp: weatherData.dateString ? new Date(weatherData.dateString): new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
         temperature: weatherData.temperature,
         humidity: weatherData.humidity,
         deviceId,
@@ -45,7 +45,7 @@ export const consumeWeatherData = async () => {
         gas5: weatherData.gas5,
         gas6: weatherData.gas6,
       };
-      // await WeatherData.create(data);
+      await WeatherData.create(data);
     } }catch (err) {
       logger.error('Error processing message:', err);
     }

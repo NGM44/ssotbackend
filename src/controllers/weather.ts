@@ -90,45 +90,6 @@ export const getData = async (
   }
 };
 
-export const updateWeatherData = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const weatherDataRecords = await WeatherData.find().lean();
-    
-const bulkOps = weatherDataRecords.map(record => {
-  const adjustedDate = new Date(record.timestamp);
-  adjustedDate.setHours(adjustedDate.getHours() + 5);
-  adjustedDate.setMinutes(adjustedDate.getMinutes() + 30);
-  return {
-    insertOne: {
-      document: {
-        ...record,
-        timestamp: adjustedDate,
-        createdAt: adjustedDate,
-        updatedAt: adjustedDate,
-      }
-    }
-  };
-  });
-  await WeatherData.collection.drop();
-  await WeatherData.bulkWrite(bulkOps);
-  return res.customSuccess(200, "Updated");
-    
-  } catch (err) {
-    const customError = new CustomError(
-      500,
-      "Raw",
-      "Error upating data",
-      null,
-      err
-    );
-    return next(customError);
-  }
-};
-
 
 
 export const getLatestData = async (
