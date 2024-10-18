@@ -263,8 +263,10 @@ async function queryWeatherData(deviceId: string, startDate: Date, endDate: Date
   projection['timestamp'] = 1;
   const data = await WeatherData.find(
     { timestamp: { $gte: startDate, $lte: endDate }, deviceId },
-    projection
-  ).lean();
+    projection,
+  )
+  .sort({ timestamp: 1 })
+  .lean();
   return data;
 }
 
@@ -294,7 +296,7 @@ async function sendReportEmail(email: string, deviceId: string, startDate: Date,
     {
       content: base64File,
       disposition: "attachment",
-      filename: `Report of ${deviceId}(${startDate}-${endDate})`,
+      filename: `Report of ${deviceId}.xlsx`,
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     }
   ];
